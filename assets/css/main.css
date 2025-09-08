@@ -1,0 +1,87 @@
+/* === PromptCraft Card === */
+.project.prompcraft {
+  background: linear-gradient(135deg, #0e1627, #1c1f3b);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project.prompcraft:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+}
+
+/* Cover / Logo */
+.project.prompcraft .cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: radial-gradient(circle at top left, #00bfff55, #0000);
+}
+
+.project.prompcraft .cover img {
+  max-width: 120px;
+  height: auto;
+  filter: drop-shadow(0 0 12px #00d4ff);
+}
+
+/* Text body */
+.project.prompcraft .body {
+  padding: 20px;
+}
+
+.project.prompcraft .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.project.prompcraft .pill {
+  background: #00d4ff20;
+  color: #00d4ff;
+  border: 1px solid #00d4ff55;
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+}
+
+.project.prompcraft p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #cdd9e5;
+}
+
+/* Buttons */
+.project.prompcraft .row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.project.prompcraft .btn {
+  flex: 1;
+  text-align: center;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.project.prompcraft .btn:hover {
+  background: #00d4ff;
+  color: #0e1627;
+}
+
+.project.prompcraft .btn.ghost {
+  background: transparent;
+  border: 1px solid #00d4ff55;
+  color: #00d4ff;
+}
+
+.project.prompcraft .btn.ghost:hover {
+  background: #00d4ff15;
+}
