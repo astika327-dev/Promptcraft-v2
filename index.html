@@ -1,24 +1,107 @@
-<!-- PromptCraft Project -->
-<article class="card project prompcraft">
-  <div class="cover">
-    <img src="assets/img/promptcraft-logo.svg" alt="PromptCraft Logo" loading="lazy">
-  </div>
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PromptCraft — Next-Gen Prompt Builder</title>
+  <link rel="stylesheet" href="assets/css/main.css" />
+  <meta name="description" content="PromptCraft: reusable prompt templates with live preview and audit-friendly export." />
+</head>
+<body>
+  <header class="site">
+    <a class="brand" href="#">
+      <span class="logo" aria-hidden="true">PC</span>
+      <span class="name">PromptCraft</span>
+    </a>
+    <nav class="nav">
+      <button id="themeToggle" class="btn ghost" aria-label="Toggle theme">☀️</button>
+      <a class="btn ghost" href="../index.html">Back to Portfolio</a>
+    </nav>
+  </header>
 
-  <div class="body">
-    <div class="meta">
-      <b>PromptCraft</b>
-      <span class="pill">AI Systems</span>
-    </div>
-    <p>
-      Next-gen prompt builder with reusable patterns, live previews, and 
-      audit-friendly export. Designed for creators and enterprises.
-    </p>
+  <section class="hero">
+    <div class="wrap hero__inner">
+      <div class="hero__text">
+        <h1>Build prompts like a pro.</h1>
+        <p>Reusable patterns, live previews, and one-click export. Designed for creators and teams that care about consistency.</p>
+        <div class="row">
+          <a href="#builder" class="btn">Start Building</a>
+          <a href="#features" class="btn ghost">See Features</a>
+        </div>
+      </div>
 
-    <div class="row">
-      <a href="https://astika327-dev.github.io/promptcraft/" 
-         target="_blank" rel="noopener" class="btn">Live Demo</a>
-      <a href="https://github.com/astika327-dev/promptcraft" 
-         target="_blank" rel="noopener" class="btn ghost">Source Code</a>
+      <!-- simple inline logo -->
+      <svg class="hero__logo" viewBox="0 0 160 160" role="img" aria-label="PromptCraft">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#1f6feb"/>
+            <stop offset="1" stop-color="#00d4ff"/>
+          </linearGradient>
+        </defs>
+        <circle cx="80" cy="80" r="70" fill="none" stroke="url(#g)" stroke-width="6"/>
+        <text x="50%" y="54%" text-anchor="middle" fill="url(#g)" font-size="56" font-family="ui-sans-serif,system-ui" dy=".35em">PC</text>
+      </svg>
     </div>
-  </div>
-</article>
+    <div class="hero__glow" aria-hidden="true"></div>
+  </section>
+
+  <main class="wrap">
+    <section id="features" class="features">
+      <article class="feat card">
+        <h3>Template Library</h3>
+        <p>Start from curated patterns for QA, UX, briefs, and reports. Bring your own templates too.</p>
+      </article>
+      <article class="feat card">
+        <h3>Variables → Form</h3>
+        <p>Fields are auto-generated from <code>{{placeholders}}</code>. Fill once, reuse forever.</p>
+      </article>
+      <article class="feat card">
+        <h3>Live Preview</h3>
+        <p>See the final prompt update as you type. Copy or download in one click.</p>
+      </article>
+      <article class="feat card">
+        <h3>Local Save</h3>
+        <p>Your last template and values are kept in your browser for quick resumes.</p>
+      </article>
+    </section>
+
+    <section id="builder" class="builder card">
+      <header class="builder__head">
+        <h2>Prompt Builder</h2>
+        <div class="row">
+          <label class="inline">
+            <span>Template</span>
+            <select id="tplSelect" aria-label="Choose template"></select>
+          </label>
+          <button id="btnImport" class="btn ghost" title="Import JSON templates">Import JSON</button>
+          <button id="btnExport" class="btn ghost" title="Export my templates">Export JSON</button>
+          <button id="btnReset"  class="btn ghost">Reset</button>
+        </div>
+      </header>
+
+      <div class="builder__grid">
+        <div class="panel">
+          <h4>Variables</h4>
+          <form id="varsForm" class="vars"></form>
+        </div>
+
+        <div class="panel">
+          <h4>Preview</h4>
+          <textarea id="preview" class="preview" spellcheck="false" placeholder="Your prompt will appear here…"></textarea>
+          <div class="row right">
+            <button id="btnCopy"     class="btn">Copy</button>
+            <button id="btnDownload" class="btn ghost">Download .txt</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site foot">
+    <p>© 2025 PromptCraft. Built for speed, clarity, and auditability.</p>
+  </footer>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/main.js"></script>
+</body>
+</html>
