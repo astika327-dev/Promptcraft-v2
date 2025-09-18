@@ -1,33 +1,21 @@
-// ===== Helpers =====
-const $ = (s, r=document) => r.querySelector(s);
-const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-const toast = (msg) => { const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1200); };
-const copy = async (text) => { try { await navigator.clipboard.writeText(text||""); toast("Copied"); } catch { alert("Clipboard blocked. Copy manually."); } };
-const downloadTxt = (name, text) => { const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text||""],{type:"text/plain"})); a.download=name; a.click(); URL.revokeObjectURL(a.href); };
+const $ = (selector, scope = document) => scope.querySelector(selector);
 
-// ===== Theme toggle =====
-(() => {
-  const html = document.documentElement;
-  const saved = localStorage.getItem("theme");
-  html.dataset.theme = saved || "dark";
-  const btn = $("#themeToggle");
-  const sync = () => btn && (btn.textContent = html.dataset.theme === "light" ? "🌙" : "☀️");
-  sync();
-  btn?.addEventListener("click", () => {
-    html.dataset.theme = html.dataset.theme === "light" ? "dark" : "light";
-    localStorage.setItem("theme", html.dataset.theme);
-    sync();
-  });
-})();
+const html = document.documentElement;
+const toastEl = $('#toast');
+let toastTimer;
 
-// ===== Templates =====
-const TEMPLATES = [
+const themeKey = 'pcraft_theme_v2';
+const stateKey = 'pcraft_state_v2';
+const templatesKey = 'pcraft_templates_v2';
+
+const BASE_TEMPLATES = [
   {
-    id: "qa_review",
-    title: "QA Review",
-    desc: "Structured QA review focusing on risks and test scope.",
-    pattern:
-`You are a senior QA lead.
+    id: 'qa_review',
+    title: 'QA Review Blueprint',
+    category: 'Quality Assurance',
+    tags: ['Testing', 'Risk', 'Coverage'],
+    desc: 'Structured QA review with risk assessment, acceptance criteria, and setup guidance.',
+    pattern: `You are a senior QA lead.
 Product: {{product}}
 Scope: {{scope}}
 Risks: {{risks}}
@@ -38,177 +26,596 @@ Write a concise test plan:
 - Data/setup required
 - Acceptance criteria
 
-Output as bullet points.`
+Present the plan as bullet points.`
   },
   {
-    id: "ux_critique",
-    title: "UX Critique",
-    desc: "Heuristic evaluation with actionable suggestions.",
-    pattern:
-`Act as a UX researcher.
-Target: {{target_persona}}
-Flow: {{flow}}
-Constraints: {{constraints}}
+    id: 'ux_critique',
+    title: 'UX Critique Report',
+    category: 'Research & UX',
+    tags: ['Heuristics', 'Insights', 'Recommendations'],
+    desc: 'Evaluate experiences with Nielsen heuristics and actionable fixes.',
+    pattern: `Act as a UX researcher.
+Target persona: {{target_persona}}
+Flow reviewed: {{flow}}
+Current constraints: {{constraints}}
 
-Evaluate using Nielsen heuristics.
-For each issue include:
+Evaluate the experience using Nielsen heuristics. For each issue include:
 - Evidence
 - Impact
-- Suggested fix
+- Recommended fix
 
-Keep it crisp and ranked by severity.`
+Rank issues from highest to lowest severity.`
   },
   {
-    id: "product_brief",
-    title: "Product Brief",
-    desc: "One-pager product brief for alignment.",
-    pattern:
-`Write a product brief.
+    id: 'product_brief',
+    title: 'Product Brief One-Pager',
+    category: 'Product',
+    tags: ['Strategy', 'Alignment', 'Planning'],
+    desc: 'Summarise problem, goals, and metrics for a new initiative.',
+    pattern: `Create a product brief with the following sections:
 
 Title: {{title}}
-Problem: {{problem}}
-Audience: {{audience}}
-Goals: {{goals}}
-Constraints: {{constraints}}
+Problem to solve: {{problem}}
+Primary audience: {{audience}}
+Goals and success metrics: {{goals}}
+Constraints & risks: {{constraints}}
 
 Deliverables:
-- Scope
-- Success metrics
-- Timeline (high-level)
-
-Use clear headings and lists.`
+- Scope and guardrails
+- Launch timeline (high-level)
+- Success definition`}
   },
   {
-    id: "bug_report",
-    title: "Bug Report",
-    desc: "Repro steps and expected vs actual.",
-    pattern:
-`Bug report for {{component}}
+    id: 'bug_report',
+    title: 'Bug Report Hand-off',
+    category: 'Engineering',
+    tags: ['Repro steps', 'Severity', 'Evidence'],
+    desc: 'Capture reproducible bug reports with clear expectations.',
+    pattern: `Document a bug report for {{component}}.
 
 Environment: {{env}}
 Preconditions: {{preconditions}}
 Steps to reproduce:
-1) {{step1}}
-2) {{step2}}
-Expected: {{expected}}
-Actual: {{actual}}
+1. {{step1}}
+2. {{step2}}
+3. {{step3}}
+Expected result: {{expected}}
+Actual result: {{actual}}
 
-Include logs/screenshot hints.`
+Include notes on logs, screenshots, or other evidence needed.`
   }
 ];
 
-// ===== Builder logic =====
-const stateKey = "pcraft_state_v1";
-
-const extractVars = (str) => {
-  const set = new Set();
-  (str.match(/{{\s*[\w.-]+\s*}}/g) || []).forEach(m => set.add(m.slice(2,-2).trim()));
-  return [...set];
+const els = {
+  themeToggle: $('#themeToggle'),
+  select: $('#tplSelect'),
+  varsForm: $('#varsForm'),
+  preview: $('#preview'),
+  wordCount: $('#wordCount'),
+  charCount: $('#charCount'),
+  lastSaved: $('#lastSaved'),
+  tplName: $('#tplName'),
+  tplDescription: $('#tplDescription'),
+  tplCategory: $('#tplCategory'),
+  tplVarCount: $('#tplVarCount'),
+  tplLineCount: $('#tplLineCount'),
+  tplVariables: $('#tplVariables'),
+  tplTags: $('#tplTags'),
+  btnCopy: $('#btnCopy'),
+  btnDownload: $('#btnDownload'),
+  btnShare: $('#btnShare'),
+  btnReset: $('#btnReset'),
+  btnImport: $('#btnImport'),
+  btnExport: $('#btnExport'),
+  btnResetTemplates: $('#btnResetTemplates'),
+  newTemplateForm: $('#newTplForm'),
+  year: $('#year')
 };
 
-const render = (tpl, values) =>
-  tpl.replace(/{{\s*([\w.-]+)\s*}}/g, (_,k)=> (values[k] ?? ""));
+const storedTemplates = readJSON(templatesKey, []);
+let templates = mergeTemplates(BASE_TEMPLATES, storedTemplates);
 
-function saveState(obj){
-  localStorage.setItem(stateKey, JSON.stringify(obj));
+const defaultState = {
+  id: templates[0]?.id ?? '',
+  inputs: {},
+  updatedAt: null
+};
+
+let state = readJSON(stateKey, defaultState);
+if (!state || typeof state !== 'object') {
+  state = { ...defaultState };
 }
-function loadState(){
-  try { return JSON.parse(localStorage.getItem(stateKey)||"null") } catch { return null }
+state.inputs = state.inputs && typeof state.inputs === 'object' ? state.inputs : {};
+if (!templates.some(t => t.id === state.id)) {
+  state.id = templates[0]?.id ?? '';
 }
 
-function buildTemplateSelect(){
-  const sel = $("#tplSelect");
-  sel.innerHTML = TEMPLATES.map(t => `<option value="${t.id}">${t.title}</option>`).join("");
+initTheme();
+initialiseBuilder();
+attachEvents();
+updateYear();
+updateLastSaved();
+
+function initialiseBuilder() {
+  rebuildInterface({ shouldSavePreview: false });
 }
 
-function buildForm(pattern, prevValues={}){
-  const vars = extractVars(pattern);
-  const form = $("#varsForm");
-  form.innerHTML = vars.map(k => `
-    <label class="block">
-      <span>${k}</span>
-      <input name="${k}" value="${(prevValues[k]||"").toString().replace(/"/g,"&quot;")}" placeholder="Enter ${k}">
-    </label>
-  `).join("");
+function attachEvents() {
+  els.select?.addEventListener('change', handleTemplateChange);
+  els.preview?.addEventListener('input', () => updateCounts(els.preview.value));
+  els.btnCopy?.addEventListener('click', () => copyToClipboard(els.preview.value, 'Prompt copied'));
+  els.btnDownload?.addEventListener('click', () => downloadTxt('prompt.txt', els.preview.value));
+  els.btnShare?.addEventListener('click', handleShareTemplate);
+  els.btnReset?.addEventListener('click', handleResetValues);
+  els.btnImport?.addEventListener('click', handleImportTemplates);
+  els.btnExport?.addEventListener('click', () => downloadTxt('my-templates.json', JSON.stringify(templates, null, 2)));
+  els.btnResetTemplates?.addEventListener('click', handleRestoreDefaults);
+  els.newTemplateForm?.addEventListener('submit', handleNewTemplateSubmit);
+}
 
-  // bind live update
-  form.querySelectorAll("input").forEach(inp=>{
-    inp.addEventListener("input", updatePreview);
+function initTheme() {
+  const saved = localStorage.getItem(themeKey);
+  const media = window.matchMedia('(prefers-color-scheme: light)');
+
+  if (saved === 'light' || saved === 'dark') {
+    html.dataset.theme = saved;
+  } else {
+    html.dataset.theme = media.matches ? 'light' : 'dark';
+  }
+
+  syncThemeToggle();
+
+  els.themeToggle?.addEventListener('click', () => {
+    html.dataset.theme = html.dataset.theme === 'light' ? 'dark' : 'light';
+    localStorage.setItem(themeKey, html.dataset.theme);
+    syncThemeToggle();
+  });
+
+  const handleSystemChange = (event) => {
+    if (localStorage.getItem(themeKey)) return;
+    html.dataset.theme = event.matches ? 'light' : 'dark';
+    syncThemeToggle();
+  };
+
+  if (media.addEventListener) {
+    media.addEventListener('change', handleSystemChange);
+  } else if (media.addListener) {
+    media.addListener(handleSystemChange);
+  }
+}
+
+function syncThemeToggle() {
+  if (!els.themeToggle) return;
+  els.themeToggle.textContent = html.dataset.theme === 'light' ? '🌙' : '☀️';
+  els.themeToggle.setAttribute('aria-label', html.dataset.theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme');
+}
+
+function rebuildInterface({ shouldSavePreview } = {}) {
+  if (!templates.length) return;
+  if (!templates.some(t => t.id === state.id)) {
+    state.id = templates[0].id;
+  }
+
+  buildTemplateSelect(state.id);
+  const tpl = getTemplate(state.id);
+  const values = getCurrentValues();
+  buildForm(tpl, values);
+  updateMeta(tpl);
+  renderAndUpdatePreview(tpl, values, { shouldSave: Boolean(shouldSavePreview) });
+}
+
+function buildTemplateSelect(selectedId) {
+  if (!els.select) return;
+  els.select.innerHTML = '';
+
+  const groups = new Map();
+  templates.forEach((tpl) => {
+    const key = tpl.category?.trim() || 'General';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(tpl);
+  });
+
+  const multipleGroups = groups.size > 1;
+  groups.forEach((items, label) => {
+    if (multipleGroups) {
+      const group = document.createElement('optgroup');
+      group.label = label;
+      items.forEach((tpl) => group.append(new Option(tpl.title, tpl.id)));
+      els.select.append(group);
+    } else {
+      items.forEach((tpl) => els.select.append(new Option(tpl.title, tpl.id)));
+    }
+  });
+
+  if (selectedId && templates.some(t => t.id === selectedId)) {
+    els.select.value = selectedId;
+  }
+}
+
+function buildForm(tpl, values = {}) {
+  if (!els.varsForm) return;
+  els.varsForm.innerHTML = '';
+  const vars = extractVariables(tpl.pattern);
+
+  if (!vars.length) {
+    const empty = document.createElement('p');
+    empty.textContent = 'This template has no variables.';
+    empty.className = 'help';
+    els.varsForm.append(empty);
+    return;
+  }
+
+  vars.forEach((key) => {
+    const label = document.createElement('label');
+    label.className = 'field';
+
+    const title = document.createElement('span');
+    title.textContent = prettifyKey(key);
+    label.append(title);
+
+    const longFieldPattern = /(summary|details|context|steps|notes|analysis|report|description)/i;
+    const isLong = longFieldPattern.test(key);
+    const control = isLong ? document.createElement('textarea') : document.createElement('input');
+
+    if (!isLong) control.type = 'text';
+    control.name = key;
+    control.value = values[key] ?? '';
+    control.placeholder = `Enter ${prettifyKey(key).toLowerCase()}`;
+    control.autocomplete = 'off';
+    control.spellcheck = control.tagName === 'TEXTAREA';
+    if (control.tagName === 'TEXTAREA') {
+      control.rows = Math.max(3, Math.ceil((values[key]?.length || 0) / 80));
+    }
+
+    control.addEventListener('input', () => handleInputChange(control));
+    label.append(control);
+    els.varsForm.append(label);
   });
 }
 
-function current(){
-  const id = $("#tplSelect").value;
-  const tpl = TEMPLATES.find(t=>t.id===id);
-  const values = Object.fromEntries($$("#varsForm input").map(i=>[i.name, i.value]));
-  return {id, tpl, values};
+function handleInputChange(control) {
+  if (!control?.name) return;
+  ensureValueBucket();
+  state.inputs[state.id][control.name] = control.value;
+  renderAndUpdatePreview(getTemplate(state.id), getCurrentValues(), { shouldSave: true });
 }
 
-function updatePreview(){
-  const { tpl, values } = current();
-  $("#preview").value = render(tpl.pattern, values);
-  saveState({ id: tpl.id, values });
-}
-
-function resetAll(){
-  const { tpl } = current();
-  buildForm(tpl.pattern, {});
-  $("#preview").value = render(tpl.pattern, {});
-  saveState({ id: tpl.id, values: {} });
-  toast("Cleared");
-}
-
-// Init
-(function init(){
-  buildTemplateSelect();
-
-  const saved = loadState();
-  if (saved?.id && TEMPLATES.some(t=>t.id===saved.id)) {
-    $("#tplSelect").value = saved.id;
+function renderAndUpdatePreview(tpl, values, { shouldSave }) {
+  if (!els.preview) return;
+  const text = renderTemplate(tpl.pattern, values);
+  els.preview.value = text;
+  updateCounts(text);
+  if (shouldSave) {
+    state.updatedAt = Date.now();
+    persistState();
+    updateLastSaved();
+  } else {
+    persistState();
   }
-  const tpl = TEMPLATES.find(t=>t.id===$("#tplSelect").value) || TEMPLATES[0];
-  buildForm(tpl.pattern, saved?.values||{});
-  $("#preview").value = render(tpl.pattern, saved?.values||{});
-})();
+}
 
-// Events
-$("#tplSelect").addEventListener("change", () => {
-  const tpl = TEMPLATES.find(t=>t.id===$("#tplSelect").value);
-  buildForm(tpl.pattern, {});
-  $("#preview").value = render(tpl.pattern, {});
-  saveState({ id: tpl.id, values: {} });
-});
+function handleTemplateChange() {
+  if (!els.select) return;
+  state.id = els.select.value;
+  ensureValueBucket();
+  const tpl = getTemplate(state.id);
+  const values = getCurrentValues();
+  buildForm(tpl, values);
+  updateMeta(tpl);
+  renderAndUpdatePreview(tpl, values, { shouldSave: true });
+  toast(`Switched to “${tpl.title}”`);
+}
 
-$("#btnCopy").addEventListener("click", (e)=>{ e.preventDefault(); copy($("#preview").value); });
-$("#btnDownload").addEventListener("click", (e)=>{ e.preventDefault(); downloadTxt("prompt.txt", $("#preview").value); });
-$("#btnReset").addEventListener("click", (e)=>{ e.preventDefault(); resetAll(); });
+function handleResetValues() {
+  ensureValueBucket();
+  state.inputs[state.id] = {};
+  const tpl = getTemplate(state.id);
+  buildForm(tpl, {});
+  renderAndUpdatePreview(tpl, {}, { shouldSave: true });
+  toast('Values cleared');
+}
 
-// Import/Export JSON (custom templates)
-$("#btnExport").addEventListener("click", (e)=>{
-  e.preventDefault();
-  downloadTxt("my-templates.json", JSON.stringify(TEMPLATES, null, 2));
-});
+function handleShareTemplate() {
+  const tpl = getTemplate(state.id);
+  const snippet = JSON.stringify(tpl, null, 2);
+  copyToClipboard(snippet, 'Template JSON copied');
+}
 
-$("#btnImport").addEventListener("click", (e)=>{
-  e.preventDefault();
-  const inp = document.createElement("input");
-  inp.type = "file"; inp.accept = "application/json";
-  inp.onchange = async () => {
-    const file = inp.files?.[0]; if (!file) return;
-    try{
+function handleImportTemplates() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
       const text = await file.text();
-      const arr = JSON.parse(text);
-      if (!Array.isArray(arr)) throw new Error("Invalid JSON");
-      // simple merge by id
-      const map = new Map(TEMPLATES.map(t=>[t.id,t]));
-      arr.forEach(t => t?.id && t?.pattern && map.set(t.id, t));
-      const merged = [...map.values()];
-      // replace globals
-      while (TEMPLATES.length) TEMPLATES.pop();
-      merged.forEach(x=>TEMPLATES.push(x));
-      buildTemplateSelect();
-      toast("Templates imported");
-    }catch(err){ alert("Import failed: " + err.message); }
-  };
-  inp.click();
-});
+      const data = JSON.parse(text);
+      if (!Array.isArray(data)) throw new Error('Expected an array of templates.');
+      const normalised = data.map(normaliseTemplate);
+      templates = mergeTemplates(templates, normalised);
+      persistTemplates();
+      rebuildInterface({ shouldSavePreview: false });
+      toast(`${normalised.length} template${normalised.length === 1 ? '' : 's'} imported`);
+    } catch (error) {
+      alert(`Import failed: ${error.message}`);
+    }
+  });
+  input.click();
+}
+
+function handleRestoreDefaults() {
+  const proceed = confirm('Restore the default template library? Custom templates will be removed.');
+  if (!proceed) return;
+  templates = mergeTemplates(BASE_TEMPLATES, []);
+  persistTemplates();
+  state.inputs = {};
+  state.id = templates[0]?.id ?? '';
+  state.updatedAt = Date.now();
+  rebuildInterface({ shouldSavePreview: true });
+  toast('Default templates restored');
+}
+
+function handleNewTemplateSubmit(event) {
+  event.preventDefault();
+  const form = event.target;
+  const formData = new FormData(form);
+  try {
+    const payload = {
+      id: formData.get('id') || formData.get('title'),
+      title: formData.get('title'),
+      desc: formData.get('desc'),
+      category: formData.get('category'),
+      tags: formData.get('tags'),
+      pattern: formData.get('pattern')
+    };
+    const template = normaliseTemplate(payload);
+    const existingIndex = templates.findIndex(t => t.id === template.id);
+    if (existingIndex >= 0) {
+      templates[existingIndex] = template;
+      toast(`Template “${template.title}” updated`);
+    } else {
+      templates.push(template);
+      toast(`Template “${template.title}” saved`);
+    }
+    persistTemplates();
+    state.id = template.id;
+    ensureValueBucket();
+    rebuildInterface({ shouldSavePreview: false });
+    form.reset();
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+function ensureValueBucket() {
+  if (!state.id) return;
+  if (!state.inputs[state.id]) {
+    state.inputs[state.id] = {};
+  }
+}
+
+function updateMeta(tpl) {
+  if (!tpl) return;
+  if (els.tplName) els.tplName.textContent = tpl.title;
+  if (els.tplDescription) {
+    els.tplDescription.textContent = tpl.desc?.trim() || 'Add a short description for this template.';
+  }
+  if (els.tplCategory) els.tplCategory.textContent = tpl.category || 'General';
+
+  const placeholders = extractVariables(tpl.pattern);
+  const lineCount = countLines(tpl.pattern);
+  if (els.tplVarCount) els.tplVarCount.textContent = placeholders.length;
+  if (els.tplLineCount) els.tplLineCount.textContent = `${lineCount} line${lineCount === 1 ? '' : 's'}`;
+
+  populateTagList(els.tplVariables, placeholders, {
+    renderItem: (li, item) => {
+      const code = document.createElement('code');
+      code.textContent = `{{${item}}}`;
+      li.append(code);
+    },
+    emptyLabel: 'No variables'
+  });
+
+  const tags = tpl.tags?.length ? tpl.tags : [];
+  populateTagList(els.tplTags, tags, { emptyLabel: 'Custom' });
+}
+
+function populateTagList(container, items = [], { renderItem, emptyLabel } = {}) {
+  if (!container) return;
+  container.innerHTML = '';
+  if (!items.length) {
+    const li = document.createElement('li');
+    li.className = 'tag-list__empty';
+    li.textContent = emptyLabel || '—';
+    container.append(li);
+    return;
+  }
+  items.forEach((item) => {
+    const li = document.createElement('li');
+    if (renderItem) {
+      renderItem(li, item);
+    } else {
+      li.textContent = item;
+    }
+    container.append(li);
+  });
+}
+
+function updateCounts(text) {
+  if (els.wordCount) {
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    els.wordCount.textContent = `${words} word${words === 1 ? '' : 's'}`;
+  }
+  if (els.charCount) {
+    const chars = text.length;
+    els.charCount.textContent = `${chars} character${chars === 1 ? '' : 's'}`;
+  }
+}
+
+function updateYear() {
+  if (!els.year) return;
+  els.year.textContent = new Date().getFullYear();
+}
+
+function updateLastSaved() {
+  if (!els.lastSaved) return;
+  if (!state.updatedAt) {
+    els.lastSaved.textContent = 'Progress auto-saves locally as you type.';
+    els.lastSaved.removeAttribute('title');
+    return;
+  }
+  const diff = Date.now() - state.updatedAt;
+  let label;
+  if (diff < 60_000) label = 'Saved moments ago';
+  else if (diff < 3_600_000) label = `Saved ${Math.round(diff / 60_000)} minute${Math.round(diff / 60_000) === 1 ? '' : 's'} ago`;
+  else if (diff < 86_400_000) label = `Saved ${Math.round(diff / 3_600_000)} hour${Math.round(diff / 3_600_000) === 1 ? '' : 's'} ago`;
+  else {
+    const days = Math.round(diff / 86_400_000);
+    label = `Saved ${days} day${days === 1 ? '' : 's'} ago`;
+  }
+  els.lastSaved.textContent = label;
+  els.lastSaved.title = new Date(state.updatedAt).toLocaleString();
+}
+
+function toast(message) {
+  if (!toastEl) return;
+  toastEl.textContent = message;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1500);
+}
+
+async function copyToClipboard(text, successMessage) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text ?? '');
+    } else {
+      const textarea = document.createElement('textarea');
+      textarea.value = text ?? '';
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.append(textarea);
+      textarea.focus();
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+    if (successMessage) toast(successMessage);
+  } catch (error) {
+    alert('Clipboard blocked. Copy manually.');
+  }
+}
+
+function downloadTxt(filename, text) {
+  const blob = new Blob([text || ''], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  toast(`${filename} downloaded`);
+}
+
+function readJSON(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (error) {
+    console.warn(`Failed to read ${key}`, error);
+    return fallback;
+  }
+}
+
+function persistState() {
+  try {
+    localStorage.setItem(stateKey, JSON.stringify(state));
+  } catch (error) {
+    console.warn('State could not be saved', error);
+  }
+}
+
+function persistTemplates() {
+  try {
+    localStorage.setItem(templatesKey, JSON.stringify(templates));
+  } catch (error) {
+    console.warn('Templates could not be saved', error);
+  }
+}
+
+function mergeTemplates(base, extra) {
+  const map = new Map();
+  base.forEach((tpl) => {
+    const normalised = normaliseTemplate(tpl);
+    map.set(normalised.id, normalised);
+  });
+  extra.forEach((tpl) => {
+    try {
+      const normalised = normaliseTemplate(tpl);
+      map.set(normalised.id, normalised);
+    } catch (error) {
+      console.warn('Skipped template during merge', error);
+    }
+  });
+  return Array.from(map.values());
+}
+
+function normaliseTemplate(raw) {
+  if (!raw || typeof raw !== 'object') {
+    throw new Error('Template must be an object.');
+  }
+  const idSource = String(raw.id ?? '').trim() || String(raw.title ?? '').trim();
+  const id = idSource.toLowerCase().replace(/[^a-z0-9_-]+/g, '_').replace(/_{2,}/g, '_').replace(/^_|_$/g, '');
+  if (!id) throw new Error('Template identifier is required.');
+
+  const pattern = String(raw.pattern ?? '').replace(/\r\n/g, '\n');
+  if (!pattern.trim()) throw new Error('Template pattern cannot be empty.');
+
+  const tags = normaliseTags(raw.tags);
+  const title = String(raw.title ?? '').trim() || id.replace(/[_-]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+  const category = String(raw.category ?? '').trim() || 'General';
+  const desc = String(raw.desc ?? '').trim();
+
+  return { id, title, category, tags, desc, pattern };
+}
+
+function normaliseTags(tags) {
+  if (Array.isArray(tags)) {
+    return tags.map((tag) => String(tag).trim()).filter(Boolean);
+  }
+  if (typeof tags === 'string') {
+    return tags.split(',').map((tag) => tag.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function extractVariables(pattern) {
+  const matches = pattern.match(/{{\s*[\w.-]+\s*}}/g) || [];
+  return Array.from(new Set(matches.map((token) => token.slice(2, -2).trim())));
+}
+
+function renderTemplate(pattern, values) {
+  return pattern.replace(/{{\s*([\w.-]+)\s*}}/g, (_, key) => values?.[key] ?? '');
+}
+
+function getTemplate(id) {
+  return templates.find((tpl) => tpl.id === id) || templates[0];
+}
+
+function getCurrentValues() {
+  ensureValueBucket();
+  return state.inputs[state.id];
+}
+
+function countLines(str) {
+  const clean = str.replace(/\r\n/g, '\n').trim();
+  if (!clean) return 0;
+  return clean.split('\n').length;
+}
+
+function prettifyKey(key) {
+  return key.replace(/[_-]+/g, ' ').replace(/\b\w/g, (match) => match.toUpperCase());
+}
