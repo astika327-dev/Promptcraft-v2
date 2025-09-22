@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PromptCraft — Builder</title>
+  <meta name="description" content="Use the PromptCraft builder to customise templates, capture context, and export production-ready prompts." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/main.css" />
+</head>
+<body>
+  <noscript>
+    <div class="noscript">PromptCraft needs JavaScript to generate templates and live previews. Please enable JavaScript.</div>
+  </noscript>
+  <div class="site-shell">
+    <header class="site-header" id="top">
+      <div class="wrap site-header__inner">
+        <a class="brand" href="index.html">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 40 40" role="img" aria-hidden="true"><defs><linearGradient id="brandGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f6feb" /><stop offset="1" stop-color="#00d4ff" /></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#brandGradient)" /><text x="50%" y="54%" text-anchor="middle" fill="#00111a" font-size="18" font-weight="700" font-family="Inter,system-ui" dy=".35em">PC</text></svg>
+          </span>
+          <span class="brand__text">PromptCraft</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="features.html">Features</a>
+          <a href="workflow.html">Workflow</a>
+          <a href="builder.html">Builder</a>
+          <a href="faq.html">FAQ</a>
+        </nav>
+        <div class="site-actions">
+          <button id="themeToggle" class="btn btn--ghost" type="button" aria-label="Toggle theme">☀️</button>
+          <a class="btn btn--primary" href="builder.html">Launch Builder</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="wrap hero__grid">
+          <div class="hero__intro">
+            <div class="hero__badge">Builder</div>
+            <h1 id="heroTitle">Build and govern prompts in one workspace</h1>
+            <p>The PromptCraft builder turns templates into guided forms with live previews, AI reviews, and exportable outputs.</p>
+            <ul class="hero__list">
+              <li>Select from curated blueprints or save your own</li>
+              <li>Collect input safely with structured variables</li>
+              <li>Export prompts and shareable JSON in one click</li>
+            </ul>
+            <div class="hero__actions">
+              <a href="builder.html#builder" class="btn btn--primary">Jump to the builder</a>
+              <a href="workflow.html" class="btn btn--ghost">Review the workflow</a>
+            </div>
+          </div>
+          <div class="hero__mockup" aria-hidden="true">
+            <div class="mockup">
+              <header class="mockup__head">
+                <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                <span class="mockup__title">PromptCraft Preview</span>
+              </header>
+              <div class="mockup__body">
+                <div class="mockup__col">
+                  <span class="mockup__label">Variables</span>
+                  <div class="mockup__field"></div>
+                  <div class="mockup__field"></div>
+                  <div class="mockup__field"></div>
+                </div>
+                <div class="mockup__col">
+                  <span class="mockup__label">Preview</span>
+                  <div class="mockup__preview"></div>
+                </div>
+              </div>
+              <footer class="mockup__foot">
+                <span class="mockup__pill">Live</span>
+                <span class="mockup__pill">Consistent</span>
+                <span class="mockup__pill">Audit ready</span>
+              </footer>
+            </div>
+          </div>
+        </div>
+        <div class="hero__decor" aria-hidden="true"></div>
+      </section>
+
+      <section id="builder" class="section builder">
+        <div class="wrap">
+          <header class="builder__head">
+            <div>
+              <p class="eyebrow">Builder</p>
+              <h2>Prompt builder with live preview</h2>
+              <p class="section__lead">Select a template, fill in the variables, and ship a prompt your stakeholders can trust.</p>
+            </div>
+            <p id="lastSaved" class="builder__status" aria-live="polite"></p>
+          </header>
+
+          <div class="builder__layout">
+            <aside class="builder__sidebar" aria-label="Template information">
+              <div class="card builder__meta" id="tplMeta">
+                <div class="builder__meta-head">
+                  <h3 id="tplName">Template</h3>
+                  <span id="tplCategory" class="pill">General</span>
+                </div>
+                <p id="tplDescription" class="builder__meta-desc"></p>
+                <dl class="builder__stats">
+                  <div>
+                    <dt>Variables</dt>
+                    <dd id="tplVarCount">0</dd>
+                  </div>
+                  <div>
+                    <dt>Approx. length</dt>
+                    <dd id="tplLineCount">0 lines</dd>
+                  </div>
+                </dl>
+                <div>
+                  <h4 class="builder__subhead">Placeholders</h4>
+                  <ul id="tplVariables" class="tag-list"></ul>
+                </div>
+                <div>
+                  <h4 class="builder__subhead">Tags</h4>
+                  <ul id="tplTags" class="tag-list"></ul>
+                </div>
+              </div>
+
+              <details class="card builder__custom" open>
+                <summary class="builder__subhead">Save a custom template</summary>
+                <form id="newTplForm" class="stack" autocomplete="off">
+                  <label class="field">
+                    <span>Template name</span>
+                    <input type="text" name="title" placeholder="Bug triage handoff" required />
+                  </label>
+                  <label class="field">
+                    <span>Identifier</span>
+                    <input type="text" name="id" placeholder="bug_triage" pattern="[a-zA-Z0-9_-]+" required />
+                    <small class="help">Used for JSON export. Letters, numbers, hyphen, underscore.</small>
+                  </label>
+                  <label class="field">
+                    <span>Category</span>
+                    <input type="text" name="category" placeholder="Operations" />
+                  </label>
+                  <label class="field">
+                    <span>Tags (comma separated)</span>
+                    <input type="text" name="tags" placeholder="handoff, quality" />
+                  </label>
+                  <label class="field">
+                    <span>Short description</span>
+                    <textarea name="desc" rows="2" placeholder="What does this prompt help with?"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Prompt pattern</span>
+                    <textarea name="pattern" rows="6" placeholder="Use {{variables}} to define your structure." required></textarea>
+                  </label>
+                  <p class="help">Variables are detected with {{curly_braces}}. They will appear as inputs automatically.</p>
+                  <button type="submit" class="btn btn--primary btn--full">Save template</button>
+                </form>
+              </details>
+
+              <div class="card builder__tools">
+                <button id="btnImport" class="btn btn--ghost btn--full" type="button">Import templates (JSON)</button>
+                <button id="btnExport" class="btn btn--ghost btn--full" type="button">Export templates</button>
+                <button id="btnResetTemplates" class="btn btn--ghost btn--full" type="button">Restore default library</button>
+              </div>
+            </aside>
+
+            <div class="builder__content">
+              <div class="card builder__select">
+                <label class="field">
+                  <span>Select template</span>
+                  <select id="tplSelect" aria-label="Choose template"></select>
+                </label>
+              </div>
+
+              <div class="builder__panels">
+                <section class="card panel" aria-label="Variable inputs">
+                  <div class="panel__head">
+                    <h3>Variables</h3>
+                    <button id="btnReset" class="btn btn--ghost btn--sm" type="button">Clear values</button>
+                  </div>
+                  <form id="varsForm" class="vars"></form>
+                </section>
+
+                <section class="card panel" aria-label="Prompt preview">
+                  <div class="panel__head">
+                    <h3>Preview</h3>
+                    <div class="preview__stats">
+                      <span id="wordCount">0 words</span>
+                      <span id="charCount">0 characters</span>
+                    </div>
+                  </div>
+                  <textarea id="preview" class="preview" spellcheck="false" placeholder="Your prompt will appear here…"></textarea>
+                  <div class="panel__actions">
+                    <button id="btnCopy" class="btn btn--primary" type="button">Copy prompt</button>
+                    <button id="btnDownload" class="btn btn--ghost" type="button">Download .txt</button>
+                    <button id="btnShare" class="btn btn--ghost" type="button">Copy template JSON</button>
+                  </div>
+                </section>
+
+                <section class="card panel panel--ai" aria-label="AI quality review">
+                  <div class="panel__head">
+                    <h3>AI quality review</h3>
+                    <span id="aiStatus" class="status-pill" data-state="idle">Idle</span>
+                  </div>
+                  <p class="help">Send your rendered prompt to the PromptCraft AI worker for a readiness check, risk calls, and suggested improvements.</p>
+                  <div class="ai-actions">
+                    <button id="btnAiReview" class="btn btn--primary" type="button">Run AI review</button>
+                    <button id="btnAiCopy" class="btn btn--ghost" type="button" disabled>Copy insights</button>
+                  </div>
+                  <div id="aiResult" class="ai-output" role="status" aria-live="polite"></div>
+                </section>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer__grid">
+        <div>
+          <div class="brand brand--muted">
+            <span class="brand__mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40" role="img" aria-hidden="true"><defs><linearGradient id="brandGradientFooter" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f6feb" /><stop offset="1" stop-color="#00d4ff" /></linearGradient></defs><rect width="40" height="40" rx="12" fill="url(#brandGradientFooter)" /><text x="50%" y="54%" text-anchor="middle" fill="#00111a" font-size="18" font-weight="700" font-family="Inter,system-ui" dy=".35em">PC</text></svg>
+            </span>
+            <span class="brand__text">PromptCraft</span>
+          </div>
+          <p class="footer__lead">Operational guardrails for your AI prompts. Built for fast-moving teams that care about audit trails.</p>
+        </div>
+        <div class="footer__col">
+          <h4>Product</h4>
+          <ul>
+            <li><a href="features.html">Features</a></li>
+            <li><a href="workflow.html">Workflow</a></li>
+            <li><a href="builder.html">Builder</a></li>
+          </ul>
+        </div>
+        <div class="footer__col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="https://astika.is-a.dev" rel="noopener">Portfolio</a></li>
+            <li><a href="faq.html">FAQ</a></li>
+            <li><a href="mailto:hello@promptcraft.dev">Contact</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="site-footer__note">© <span id="year"></span> PromptCraft. Crafted for builders, researchers, and operations teams.</p>
+    </footer>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
