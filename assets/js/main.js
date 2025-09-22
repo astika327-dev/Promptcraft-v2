@@ -64,7 +64,7 @@ Constraints & risks: {{constraints}}
 Deliverables:
 - Scope and guardrails
 - Launch timeline (high-level)
-- Success definition`}
+- Success definition`
   },
   {
     id: 'bug_report',
