@@ -7,6 +7,7 @@ let toastTimer;
 const themeKey = 'pcraft_theme_v2';
 const stateKey = 'pcraft_state_v2';
 const templatesKey = 'pcraft_templates_v2';
+const AI_ENDPOINT = 'https://long-sunset-5416.baliwebdevelover.workers.dev/';
 
 const BASE_TEMPLATES = [
   {
@@ -109,6 +110,10 @@ const els = {
   btnExport: $('#btnExport'),
   btnResetTemplates: $('#btnResetTemplates'),
   newTemplateForm: $('#newTplForm'),
+  aiButton: $('#btnAiReview'),
+  aiCopy: $('#btnAiCopy'),
+  aiStatus: $('#aiStatus'),
+  aiResult: $('#aiResult'),
   year: $('#year')
 };
 
@@ -130,8 +135,22 @@ if (!templates.some(t => t.id === state.id)) {
   state.id = templates[0]?.id ?? '';
 }
 
+const aiState = {
+  status: 'idle',
+  lastText: '',
+  abortController: null
+};
+
+const AI_STATUS_LABELS = {
+  idle: 'Idle',
+  loading: 'Reviewing…',
+  success: 'Review ready',
+  error: 'Error'
+};
+
 initTheme();
 initialiseBuilder();
+resetAIOutput();
 attachEvents();
 updateYear();
 updateLastSaved();
@@ -151,6 +170,8 @@ function attachEvents() {
   els.btnExport?.addEventListener('click', () => downloadTxt('my-templates.json', JSON.stringify(templates, null, 2)));
   els.btnResetTemplates?.addEventListener('click', handleRestoreDefaults);
   els.newTemplateForm?.addEventListener('submit', handleNewTemplateSubmit);
+  els.aiButton?.addEventListener('click', handleAIReview);
+  els.aiCopy?.addEventListener('click', handleAICopyInsights);
 }
 
 function initTheme() {
@@ -304,6 +325,7 @@ function handleTemplateChange() {
   updateMeta(tpl);
   renderAndUpdatePreview(tpl, values, { shouldSave: true });
   toast(`Switched to “${tpl.title}”`);
+  resetAIOutput('Template changed. Run AI review for fresh insights.');
 }
 
 function handleResetValues() {
@@ -313,6 +335,7 @@ function handleResetValues() {
   buildForm(tpl, {});
   renderAndUpdatePreview(tpl, {}, { shouldSave: true });
   toast('Values cleared');
+  resetAIOutput('Values cleared. Run AI review when you are ready.');
 }
 
 function handleShareTemplate() {
@@ -337,6 +360,7 @@ function handleImportTemplates() {
       persistTemplates();
       rebuildInterface({ shouldSavePreview: false });
       toast(`${normalised.length} template${normalised.length === 1 ? '' : 's'} imported`);
+      resetAIOutput('Template library updated. Run AI review for new insights.');
     } catch (error) {
       alert(`Import failed: ${error.message}`);
     }
@@ -354,6 +378,7 @@ function handleRestoreDefaults() {
   state.updatedAt = Date.now();
   rebuildInterface({ shouldSavePreview: true });
   toast('Default templates restored');
+  resetAIOutput('Default templates restored. Run AI review to refresh insights.');
 }
 
 function handleNewTemplateSubmit(event) {
@@ -383,6 +408,7 @@ function handleNewTemplateSubmit(event) {
     ensureValueBucket();
     rebuildInterface({ shouldSavePreview: false });
     form.reset();
+    resetAIOutput('Template saved. Run AI review when ready.');
   } catch (error) {
     alert(error.message);
   }
@@ -518,6 +544,268 @@ function downloadTxt(filename, text) {
   link.remove();
   URL.revokeObjectURL(url);
   toast(`${filename} downloaded`);
+}
+
+async function handleAIReview() {
+  if (!els.preview) return;
+  const previewText = els.preview.value.trim();
+  if (!previewText) {
+    toast('Add some content to the preview before running the AI review.');
+    els.preview.focus();
+    return;
+  }
+
+  const tpl = getTemplate(state.id) || {};
+  setAIStatus('loading');
+  setAIActionsBusy(true);
+  setAIResult({ isLoading: true });
+
+  if (aiState.abortController?.abort) {
+    try {
+      aiState.abortController.abort();
+    } catch (error) {
+      console.warn('Previous AI request could not be cancelled', error);
+    }
+  }
+
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  aiState.abortController = controller;
+
+  try {
+    const payload = buildAIPayload(tpl, previewText);
+    const requestInit = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    };
+    if (controller) requestInit.signal = controller.signal;
+
+    const response = await fetch(AI_ENDPOINT, requestInit);
+    const rawText = await response.text();
+
+    if (!response.ok) {
+      const message = extractAIMessage(rawText) || `${response.status} ${response.statusText}`;
+      throw new Error(message);
+    }
+
+    const message = extractAIMessage(rawText);
+    if (!message) {
+      throw new Error('AI worker returned an empty response.');
+    }
+
+    setAIStatus('success');
+    setAIResult({ text: message });
+    toast('AI review ready');
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      setAIStatus('idle');
+      setAIResult({ text: 'AI review cancelled.', isPlaceholder: true });
+      return;
+    }
+    console.error('AI review failed', error);
+    setAIStatus('error');
+    setAIResult({ text: formatAIError(error), isError: true });
+    toast('AI review failed');
+  } finally {
+    setAIActionsBusy(false);
+    aiState.abortController = null;
+  }
+}
+
+function handleAICopyInsights() {
+  if (!aiState.lastText) return;
+  copyToClipboard(aiState.lastText, 'AI insights copied');
+}
+
+function resetAIOutput(message = 'Run AI review to get insights on your current prompt.') {
+  if (aiState.abortController?.abort) {
+    try {
+      aiState.abortController.abort();
+    } catch (error) {
+      console.warn('AI review abort failed', error);
+    }
+  }
+  aiState.abortController = null;
+  aiState.lastText = '';
+  setAIStatus('idle');
+  setAIActionsBusy(false);
+  setAIResult({ text: message, isPlaceholder: true });
+}
+
+function setAIStatus(state, label) {
+  aiState.status = state;
+  if (!els.aiStatus) return;
+  const text = label || AI_STATUS_LABELS[state] || state;
+  els.aiStatus.dataset.state = state;
+  els.aiStatus.textContent = text;
+}
+
+function setAIActionsBusy(isBusy) {
+  if (els.aiButton) {
+    if (!els.aiButton.dataset.defaultLabel) {
+      els.aiButton.dataset.defaultLabel = els.aiButton.textContent?.trim() || 'Run AI review';
+    }
+    els.aiButton.disabled = Boolean(isBusy);
+    els.aiButton.textContent = isBusy ? 'Running…' : els.aiButton.dataset.defaultLabel;
+  }
+  if (els.aiCopy) {
+    els.aiCopy.disabled = true;
+  }
+}
+
+function setAIResult({ text = '', isPlaceholder = false, isError = false, isLoading = false } = {}) {
+  if (!els.aiResult) return;
+  els.aiResult.classList.toggle('ai-output--error', Boolean(isError));
+  els.aiResult.innerHTML = '';
+
+  if (isLoading) {
+    const span = document.createElement('span');
+    span.className = 'ai-output__spinner';
+    span.textContent = 'Reviewing…';
+    els.aiResult.append(span);
+    aiState.lastText = '';
+  } else if (isPlaceholder) {
+    const p = document.createElement('p');
+    p.className = 'ai-output__placeholder';
+    p.textContent = text || 'Insights will appear here once the AI review completes.';
+    els.aiResult.append(p);
+    aiState.lastText = '';
+  } else {
+    const clean = String(text || '').trim();
+    const pre = document.createElement('pre');
+    pre.className = 'ai-output__pre';
+    pre.textContent = clean || 'AI review returned no insights.';
+    els.aiResult.append(pre);
+    aiState.lastText = clean;
+  }
+
+  if (els.aiCopy) {
+    els.aiCopy.disabled = !aiState.lastText;
+  }
+}
+
+function buildAIPayload(template, preview) {
+  const safeTemplate = template || {};
+  const pattern = String(safeTemplate.pattern ?? '');
+  const placeholders = extractVariables(pattern);
+  const metadata = [
+    `Template title: ${safeTemplate.title || 'Untitled template'}`,
+    `Category: ${safeTemplate.category || 'General'}`,
+    `Tags: ${Array.isArray(safeTemplate.tags) && safeTemplate.tags.length ? safeTemplate.tags.join(', ') : '—'}`,
+    `Variables: ${placeholders.length ? placeholders.join(', ') : 'None detected'}`
+  ].join('\n');
+
+  const instructions = [
+    'Evaluate the rendered prompt for clarity, completeness, policy risk, and operational readiness.',
+    'Return Markdown with the following sections:',
+    '1. **Readiness score** out of 100 with a short rationale.',
+    '2. **Strengths** as bullet points.',
+    '3. **Risks or gaps** as bullet points (include missing context or policy flags).',
+    '4. **Recommended improvements** as bullet points with next actions.',
+    'Keep the response under 180 words.'
+  ].join('\n');
+
+  return {
+    messages: [
+      {
+        role: 'system',
+        content: 'You are PromptCraft’s AI quality reviewer. Analyse prompts for enterprise readiness and provide actionable, concise feedback.'
+      },
+      {
+        role: 'user',
+        content: `${metadata}\n\nOriginal template pattern:\n${pattern || '—'}\n\nRendered prompt for review:\n${preview}\n\n${instructions}`
+      }
+    ],
+    stream: false
+  };
+}
+
+function extractAIMessage(payload) {
+  if (payload == null) return '';
+  if (typeof payload === 'string') {
+    const trimmed = payload.trim();
+    if (!trimmed) return '';
+    try {
+      const parsed = JSON.parse(trimmed);
+      const extracted = extractAIMessage(parsed);
+      return extracted || trimmed;
+    } catch (_error) {
+      return trimmed;
+    }
+  }
+
+  if (Array.isArray(payload)) {
+    return payload
+      .map((item) => extractAIMessage(item))
+      .filter(Boolean)
+      .join('\n\n');
+  }
+
+  if (typeof payload === 'object') {
+    if (typeof payload.result === 'string') return payload.result.trim();
+    if (typeof payload.response === 'string') return payload.response.trim();
+    if (payload.response) {
+      const nested = extractAIMessage(payload.response);
+      if (nested) return nested;
+    }
+    if (typeof payload.output_text === 'string') return payload.output_text.trim();
+    if (Array.isArray(payload.output_text)) {
+      const combined = payload.output_text
+        .map((item) => (typeof item === 'string' ? item : extractAIMessage(item)))
+        .filter(Boolean)
+        .join('\n\n');
+      if (combined) return combined.trim();
+    }
+    if (Array.isArray(payload.choices)) {
+      const choiceText = payload.choices
+        .map((choice) => {
+          if (typeof choice === 'string') return choice;
+          if (choice?.message?.content) return extractAIMessage(choice.message.content);
+          if (choice?.text) return String(choice.text);
+          return '';
+        })
+        .filter(Boolean)
+        .join('\n\n');
+      if (choiceText) return choiceText.trim();
+    }
+    if (Array.isArray(payload.messages)) {
+      const messages = payload.messages
+        .map((msg) => {
+          if (typeof msg === 'string') return msg;
+          if (msg?.content) return extractAIMessage(msg.content);
+          return '';
+        })
+        .filter(Boolean)
+        .join('\n\n');
+      if (messages) return messages.trim();
+    }
+    if (Array.isArray(payload.output)) {
+      const output = payload.output
+        .map((item) => extractAIMessage(item))
+        .filter(Boolean)
+        .join('\n\n');
+      if (output) return output.trim();
+    }
+    if (payload.message) {
+      const message = extractAIMessage(payload.message);
+      if (message) return message.trim();
+    }
+    const firstString = Object.values(payload).find((value) => typeof value === 'string' && value.trim());
+    if (firstString) return firstString.trim();
+  }
+
+  return '';
+}
+
+function formatAIError(error) {
+  if (!error) return 'Unknown error while contacting the AI worker.';
+  if (typeof error === 'string') return error;
+  const message = error.message || '';
+  if (message.includes('Failed to fetch')) {
+    return 'Could not reach the AI worker. Check your connection and try again.';
+  }
+  if (message) return message;
+  return 'AI worker returned an unexpected error. Please try again.';
 }
 
 function readJSON(key, fallback) {
