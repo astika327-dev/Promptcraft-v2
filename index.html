@@ -246,6 +246,19 @@
                     <button id="btnShare" class="btn btn--ghost" type="button">Copy template JSON</button>
                   </div>
                 </section>
+
+                <section class="card panel panel--ai" aria-label="AI quality review">
+                  <div class="panel__head">
+                    <h3>AI quality review</h3>
+                    <span id="aiStatus" class="status-pill" data-state="idle">Idle</span>
+                  </div>
+                  <p class="help">Send your rendered prompt to the PromptCraft AI worker for a readiness check, risk calls, and suggested improvements.</p>
+                  <div class="ai-actions">
+                    <button id="btnAiReview" class="btn btn--primary" type="button">Run AI review</button>
+                    <button id="btnAiCopy" class="btn btn--ghost" type="button" disabled>Copy insights</button>
+                  </div>
+                  <div id="aiResult" class="ai-output" role="status" aria-live="polite"></div>
+                </section>
               </div>
             </div>
           </div>

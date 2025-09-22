@@ -613,6 +613,120 @@ textarea:focus {
   margin-top: 20px;
 }
 
+.panel--ai {
+  display: grid;
+  gap: 18px;
+}
+
+.ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.status-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status-pill[data-state="idle"] {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.status-pill[data-state="loading"] {
+  border-color: rgba(31, 111, 235, 0.35);
+  color: var(--accent-alt);
+}
+
+.status-pill[data-state="success"] {
+  border-color: rgba(27, 191, 114, 0.45);
+  color: var(--success);
+}
+
+.status-pill[data-state="error"] {
+  border-color: rgba(241, 164, 11, 0.4);
+  color: var(--warning);
+}
+
+.ai-output {
+  min-height: 160px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  display: grid;
+  align-content: start;
+  gap: 12px;
+}
+
+.ai-output__placeholder {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.ai-output__pre {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.ai-output__spinner {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--accent-alt);
+  font-weight: 600;
+  letter-spacing: 0.08rem;
+}
+
+.ai-output__spinner::before {
+  content: '';
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 212, 255, 0.4);
+  border-top-color: var(--accent-alt);
+  animation: spin 0.8s linear infinite;
+}
+
+.ai-output--error {
+  border-color: rgba(241, 164, 11, 0.45);
+  background: rgba(241, 164, 11, 0.08);
+}
+
+.ai-output--error .ai-output__pre {
+  color: var(--warning);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .pill {
   display: inline-flex;
   padding: 5px 12px;
