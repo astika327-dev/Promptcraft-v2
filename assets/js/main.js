@@ -2,6 +2,8 @@ const $ = (selector, scope = document) => scope.querySelector(selector);
 
 const html = document.documentElement;
 const toastEl = $('#toast');
+const builderRoot = document.querySelector('.builder');
+const hasBuilder = Boolean(builderRoot);
 let toastTimer;
 
 const themeKey = 'pcraft_theme_v2';
@@ -149,11 +151,14 @@ const AI_STATUS_LABELS = {
 };
 
 initTheme();
-initialiseBuilder();
-resetAIOutput();
 attachEvents();
 updateYear();
-updateLastSaved();
+
+if (hasBuilder) {
+  initialiseBuilder();
+  resetAIOutput();
+  updateLastSaved();
+}
 
 function initialiseBuilder() {
   rebuildInterface({ shouldSavePreview: false });
