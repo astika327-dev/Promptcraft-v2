@@ -25,41 +25,41 @@ export async function createPrompt(prevState: State, formData: FormData): Promis
   })
 
   if (!validatedFields.success) {
-    // For simplicity, we'll log the error.
-    // In a real app, you'd return this to the form to show user-friendly errors.
-    console.error(validatedFields.error.flatten().fieldErrors);
     return {
-        errors: validatedFields.error.flatten().fieldErrors,
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Validation Error: Please check your input.",
     };
   }
 
   // In a real app, you would get the user ID from the session.
   // For now, let's find or create a dummy user to associate the prompt with.
-  let user = await prisma.user.findUnique({
-    where: { email: "testuser@example.com" },
-  });
-
-  if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: "testuser@example.com",
-        name: "Test User",
-      },
-    });
-  }
+  const DUMMY_USER_EMAIL = "testuser@example.com";
+  let user;
 
   try {
+    user = await prisma.user.findUnique({
+      where: { email: DUMMY_USER_EMAIL },
+    });
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          email: DUMMY_USER_EMAIL,
+          name: "Test User",
+        },
+      });
+    }
+
     await prisma.prompt.create({
       data: {
         title: validatedFields.data.title,
         content: validatedFields.data.content,
         authorId: user.id,
       },
-    })
+    });
   } catch (error) {
     console.error("Database Error:", error);
-    // Handle database errors
-    return { message: "Database Error: Failed to Create Prompt." };
+    return { message: "Database Error: Failed to create prompt. Please try again." };
   }
 
   revalidatePath("/")
