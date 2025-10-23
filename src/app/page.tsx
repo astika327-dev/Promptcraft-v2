@@ -1,6 +1,8 @@
 import prisma from "@/lib/db";
 import { CreatePromptForm } from "@/components/ui/CreatePromptForm";
-import type { Prompt } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+
+type PromptType = Prisma.PromptGetPayload<{}>
 
 export const dynamic = 'force-dynamic'
 
@@ -19,7 +21,7 @@ export default async function Home() {
         <h2 className="text-2xl font-semibold mb-4">Community Prompts</h2>
         {prompts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {prompts.map((prompt: Prompt) => (
+            {prompts.map((prompt: PromptType) => (
               <div key={prompt.id} className="border p-4 rounded-lg shadow">
                 <h3 className="text-xl font-bold">{prompt.title}</h3>
                 <p className="mt-2 text-gray-700">{prompt.content}</p>
