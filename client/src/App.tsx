@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { generatePrompt, TargetModel } from './lib/api';
+import { useState, useEffect } from 'react';
+import { generatePrompt, TargetModel, apiFetch } from './lib/api';
 import { promptTemplates } from './lib/templates';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +14,20 @@ function App() {
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [healthStatus, setHealthStatus] = useState<string>('Checking backend status...');
+
+  useEffect(() => {
+    // Check backend health on component mount
+    apiFetch<{ status: string }>('/api/healthcheck')
+      .then(data => {
+        setHealthStatus(`Backend: ${data.status}`);
+      })
+      .catch(err => {
+        console.error(err);
+        setHealthStatus('Backend: Error');
+        toast.error('Failed to connect to the backend. Please ensure it is running.');
+      });
+  }, []); // Empty dependency array ensures this runs only once
 
   const handleGenerate = async () => {
     if (!context) {
@@ -49,6 +63,7 @@ function App() {
       <header className="text-center mb-10">
         <h1 className="text-5xl font-bold">PromptCraft</h1>
         <p className="text-muted-foreground mt-2">Generate Production-Ready Prompts for Any AI Model</p>
+        <p className="text-sm text-muted-foreground mt-1">{healthStatus}</p>
       </header>
 
       <main className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">

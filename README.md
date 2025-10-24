@@ -2,12 +2,8 @@
 
 PromptCraft adalah platform AI siap produksi yang memungkinkan Anda membuat prompt berkualitas tinggi yang dioptimalkan untuk model AI target seperti GPT-4, Claude 3.5, dan lainnya.
 
-[![Deploy Frontend](https://www.herokucdn.com/deploy/button.svg)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fastika327-dev%2Fpromptcraft&env=VITE_API_BASE_URL)
-[![Deploy Backend](https://www.herokucdn.com/deploy/button.svg)](https://render.com/deploy)
-
-**Placeholder untuk Screenshot UI Konsep**
-*(Di sini Anda akan menambahkan gambar yang menunjukkan antarmuka aplikasi)*
-
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fastika327-dev%2Fpromptcraft&env=VITE_API_BASE_URL&root-directory=client)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/astika327-dev/promptcraft)
 ---
 
 ## Fitur
@@ -45,7 +41,12 @@ cd server
 
 # 2. (Direkomendasikan) Buat dan aktifkan lingkungan virtual
 python -m venv venv
-source venv/bin/activate # Di Windows: venv\Scripts\activate
+
+# Aktifkan virtual environment:
+# - Di macOS/Linux (bash/zsh):
+source venv/bin/activate
+# - Di Windows (Command Prompt/PowerShell):
+# venv\Scripts\activate
 
 # 3. Instal dependensi
 pip install -r requirements.txt
@@ -64,13 +65,16 @@ Server API sekarang akan berjalan di `http://localhost:8000`.
 ### 2. Frontend (Client)
 
 ```bash
-# 1. Pindah ke direktori client (dari root proyek)
+# 1. (Jika Anda dari direktori server) Kembali ke direktori root proyek
+cd ..
+
+# 2. Pindah ke direktori client
 cd client
 
-# 2. Instal dependensi
+# 3. Instal dependensi
 npm install
 
-# 3. Jalankan server pengembangan frontend
+# 4. Jalankan server pengembangan frontend
 npm run dev
 ```
 Aplikasi React sekarang akan berjalan di `http://localhost:5173` (atau port lain jika 5173 sedang digunakan).

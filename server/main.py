@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Literal
@@ -7,10 +7,11 @@ from .ai.generator import generate_prompt
 
 app = FastAPI()
 
+
 # CORS configuration to allow frontend requests
 origins = [
     "http://localhost:3000",
-    "http://localhost:5173", # Vite's default dev port
+    "http://localhost:5173",  # Vite's default dev port
     # Add your Vercel deployment URL here after deploying
     # "https://your-frontend-deployment-url.vercel.app",
 ]
@@ -23,16 +24,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class GenerationRequest(BaseModel):
     context: str
-    target_model: Literal["GPT-4", "Claude 3.5", "Llama 3", "Gemini", "Stable Diffusion"]
+    target_model: Literal[
+        "GPT-4", "Claude 3.5", "Llama 3", "Gemini", "Stable Diffusion"
+    ]
+
 
 class GenerationResponse(BaseModel):
     prompt: str
 
+
 @app.get("/")
 def read_root():
     return {"status": "PromptCraft API is running"}
+
 
 @app.post("/generate", response_model=GenerationResponse)
 async def handle_generate_prompt(request: GenerationRequest):
@@ -49,11 +56,13 @@ async def handle_generate_prompt(request: GenerationRequest):
         print(f"An unexpected error occurred: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
+
 # Placeholder for future CRUD operations for user prompts
 # @app.get("/prompts")
 # async def get_user_prompts():
 #     # Logic to fetch prompts from PostgreSQL (Supabase)
 #     return []
+
 
 if __name__ == "__main__":
     import uvicorn
