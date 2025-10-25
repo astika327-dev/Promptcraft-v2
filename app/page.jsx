@@ -12,7 +12,7 @@ export default function Home() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input) {
-      setError('Please enter an idea.');
+      setError('Please enter an idea to generate a prompt.');
       return;
     }
 
@@ -32,7 +32,7 @@ export default function Home() {
 
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.message || 'Something went wrong');
+        throw new Error(err.message || 'An unknown error occurred.');
       }
 
       const data = await response.json();
@@ -53,47 +53,51 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <h1 className="text-4xl font-bold text-center mb-2">PromptCraft</h1>
-        <p className="text-center text-gray-400 mb-8">Turn your simple ideas into powerful AI prompts.</p>
+    <div className="min-h-screen bg-grid-pattern text-gray-200 flex flex-col items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-3xl bg-black bg-opacity-50 backdrop-blur-md rounded-2xl border border-fuchsia-500/30 shadow-2xl shadow-fuchsia-500/10 p-8">
+        <h1 className="text-5xl font-bold text-center mb-2 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-400">
+          PromptCraft
+        </h1>
+        <p className="text-center text-gray-400 mb-8 text-lg">
+          Transforming Ideas into Enterprise-Grade AI Prompts
+        </p>
 
         <form onSubmit={handleSubmit}>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            className="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            rows="3"
-            placeholder="e.g., a logo for a sustainable coffee brand"
+            className="w-full p-4 bg-gray-900/70 border border-gray-700 rounded-lg focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 focus:outline-none transition-all duration-300 placeholder-gray-500"
+            rows="4"
+            placeholder="e.g., a dynamic logo for an agile cybersecurity firm..."
           />
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full mt-4 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-500 text-white font-bold py-3 px-4 rounded-lg transition duration-300"
+            className="w-full mt-4 bg-gradient-to-r from-fuchsia-600 to-blue-600 hover:from-fuchsia-700 hover:to-blue-700 disabled:bg-gray-700 disabled:from-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 disabled:scale-100 shadow-lg hover:shadow-cyan-500/30"
           >
-            {isLoading ? 'Generating...' : 'Generate Prompt'}
+            {isLoading ? 'Crafting...' : 'Generate Prompt'}
           </button>
         </form>
 
         {isLoading && (
           <div className="flex justify-center mt-8">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
 
         {error && (
-          <div className="mt-8 p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg">
-            <p><strong>Error:</strong> {error}</p>
+          <div className="mt-8 p-4 bg-red-900/30 border border-red-700/50 text-red-300 rounded-lg">
+            <p><strong className="font-semibold">Error:</strong> {error}</p>
           </div>
         )}
 
         {prompt && (
-          <div className="mt-8 p-6 bg-gray-800 border border-gray-700 rounded-lg relative">
-            <h2 className="text-2xl font-semibold mb-4">Your Generated Prompt:</h2>
-            <p className="text-gray-300 whitespace-pre-wrap">{prompt}</p>
+          <div className="mt-8 p-6 bg-gray-900/50 border border-gray-700/50 rounded-lg relative transition-opacity duration-500 animate-fade-in">
+            <h2 className="text-2xl font-semibold mb-4 text-cyan-400">Your Generated Prompt:</h2>
+            <p className="text-gray-300 whitespace-pre-wrap font-mono text-base">{prompt}</p>
             <button
               onClick={handleCopy}
-              className="absolute top-4 right-4 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition duration-300"
+              className="absolute top-4 right-4 bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors duration-300 border border-gray-600"
             >
               {copied ? 'Copied!' : 'Copy'}
             </button>
