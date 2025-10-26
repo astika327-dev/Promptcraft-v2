@@ -53,8 +53,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-grid-pattern text-gray-200 flex flex-col items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-3xl bg-black bg-opacity-50 backdrop-blur-md rounded-2xl border border-fuchsia-500/30 shadow-2xl shadow-fuchsia-500/10 p-8">
+    <div className="flex flex-col items-center justify-center p-4 font-sans">
+      <div className="w-full max-w-3xl bg-black bg-opacity-50 backdrop-blur-md rounded-2xl border border-fuchsia-500/30 shadow-2xl shadow-fuchsia-500/10 p-8 mt-10">
         <h1 className="text-5xl font-bold text-center mb-2 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-400">
           PromptCraft
         </h1>
@@ -104,6 +104,58 @@ export default function Home() {
           </div>
         )}
       </div>
+
+      {/* Features Section */}
+      <section className="w-full max-w-5xl mt-20 text-center">
+        <h2 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">Why PromptCraft?</h2>
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="bg-gray-900/40 p-6 rounded-lg border border-gray-700/50">
+            <h3 className="text-2xl font-semibold mb-3 text-fuchsia-400">Advanced AI</h3>
+            <p className="text-gray-400">Leverage state-of-the-art models to transform simple ideas into complex, powerful prompts.</p>
+          </div>
+          <div className="bg-gray-900/40 p-6 rounded-lg border border-gray-700/50">
+            <h3 className="text-2xl font-semibold mb-3 text-fuchsia-400">Marketplace</h3>
+            <p className="text-gray-400">Discover, buy, and sell high-quality prompt templates from a community of creators.</p>
+          </div>
+          <div className="bg-gray-900/40 p-6 rounded-lg border border-gray-700/50">
+            <h3 className="text-2xl font-semibold mb-3 text-fuchsia-400">For Creators</h3>
+            <p className="text-gray-400">Monetize your prompt engineering skills by selling your creations to a global audience.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="w-full max-w-5xl mt-20 text-center">
+        <h2 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">How It Works</h2>
+        <div className="grid md:grid-cols-3 gap-8 text-gray-400">
+            <div className="flex flex-col items-center">
+                <div className="text-5xl font-bold text-cyan-400 mb-2">1</div>
+                <h3 className="text-xl font-semibold mb-2">Input Your Idea</h3>
+                <p>Start with a simple concept or idea. Let our AI do the heavy lifting.</p>
+            </div>
+            <div className="flex flex-col items-center">
+                <div className="text-5xl font-bold text-cyan-400 mb-2">2</div>
+                <h3 className="text-xl font-semibold mb-2">Generate Prompt</h3>
+                <p>Our system crafts a detailed, professional-grade prompt for you.</p>
+            </div>
+            <div className="flex flex-col items-center">
+                <div className="text-5xl font-bold text-cyan-400 mb-2">3</div>
+                <h3 className="text-xl font-semibold mb-2">Explore & Create</h3>
+                <p>Use your new prompt, or browse the marketplace for more inspiration.</p>
+            </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="w-full max-w-5xl mt-20 text-center bg-gray-900/40 p-10 rounded-lg border border-fuchsia-500/30">
+        <h2 className="text-3xl font-bold mb-4">Ready to Explore?</h2>
+        <p className="text-gray-400 mb-6 max-w-2xl mx-auto">
+            Dive into our marketplace to find the perfect prompt or start selling your own creations today.
+        </p>
+        <a href="/marketplace" className="bg-gradient-to-r from-fuchsia-600 to-blue-600 hover:from-fuchsia-700 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/30">
+            Visit the Marketplace
+        </a>
+      </section>
     </div>
   );
 }
