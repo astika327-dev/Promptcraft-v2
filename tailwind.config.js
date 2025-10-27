@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const { brand } = require('./lib/brand');
+
 module.exports = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
@@ -7,6 +9,12 @@ module.exports = {
   ],
   theme: {
     extend: {
+      colors: brand.colors,
+      fontFamily: brand.typography.fontFamily,
+      fontSize: brand.typography.fontSize,
+      lineHeight: brand.typography.lineHeight,
+      spacing: brand.spacing,
+      borderRadius: brand.borderRadius,
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':

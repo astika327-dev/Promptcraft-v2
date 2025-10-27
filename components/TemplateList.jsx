@@ -28,7 +28,7 @@ export default function TemplateList() {
   }, [page]);
 
   if (isLoading) {
-    return <div className="text-center">Loading templates...</div>;
+    return <div className="text-center text-gray-600">Loading templates...</div>;
   }
 
   return (
@@ -39,11 +39,19 @@ export default function TemplateList() {
         ))}
       </div>
       <div className="flex justify-center mt-8 space-x-4">
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
+        <button
+          onClick={() => setPage(p => Math.max(1, p - 1))}
+          disabled={page === 1}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg disabled:opacity-50"
+        >
           Previous
         </button>
-        <span className="py-2">Page {page} of {totalPages}</span>
-        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg disabled:opacity-50">
+        <span className="py-2 text-gray-600">Page {page} of {totalPages}</span>
+        <button
+          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          disabled={page === totalPages}
+          className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg disabled:opacity-50"
+        >
           Next
         </button>
       </div>
