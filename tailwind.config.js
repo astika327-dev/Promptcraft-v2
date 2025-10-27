@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
-const { brand } = require('./lib/brand');
+import { brand } from './lib/brand.js';
 
-module.exports = {
+const config = {
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -23,4 +23,6 @@ module.exports = {
     },
   },
   plugins: [],
-}
+};
+
+export default config;

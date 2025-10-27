@@ -10,24 +10,24 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-background/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex-shrink-0">
-            <Link href="/" className="text-2xl font-bold text-gray-800">
+            <Link href="/" className="text-2xl font-bold text-primary">
               PromptCraft
             </Link>
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              <Link href="/" className="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+              <Link href="/" className="text-foreground/80 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
                 Home
               </Link>
-              <Link href="/marketplace" className="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+              <Link href="/marketplace" className="text-foreground/80 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
                 Marketplace
               </Link>
               {status === 'authenticated' && (
-                <Link href="/marketplace/my-library" className="text-gray-600 hover:text-gray-800 px-3 py-2 rounded-md text-sm font-medium">
+                <Link href="/marketplace/my-library" className="text-foreground/80 hover:text-primary px-3 py-2 rounded-md text-sm font-medium">
                   My Library
                 </Link>
               )}
@@ -35,13 +35,13 @@ export default function Navbar() {
           </div>
           <div className="hidden md:block">
             {status === 'loading' ? (
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
             ) : status === 'authenticated' ? (
-              <Link href="/api/auth/signout" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm">
+              <Link href="/api/auth/signout" className="bg-muted hover:bg-muted/80 text-foreground font-bold py-2 px-4 rounded-lg text-sm">
                 Sign Out
               </Link>
             ) : (
-              <Link href="/auth/signin" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-sm">
+              <Link href="/auth/signin" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2 px-4 rounded-lg text-sm">
                 Sign In
               </Link>
             )}
@@ -50,7 +50,7 @@ export default function Navbar() {
             <button
               onClick={() => setIsOpen(!isOpen)}
               type="button"
-              className="bg-gray-200 inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-200 focus:ring-white"
+              className="bg-muted inline-flex items-center justify-center p-2 rounded-md text-foreground/80 hover:text-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background focus:ring-primary"
               aria-controls="mobile-menu"
               aria-expanded="false"
               data-testid="hamburger-button"
@@ -73,25 +73,25 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden" id="mobile-menu">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href="/" className="text-gray-600 hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium">
+            <Link href="/" className="text-foreground/80 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">
               Home
             </Link>
-            <Link href="/marketplace" className="text-gray-600 hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium">
+            <Link href="/marketplace" className="text-foreground/80 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">
               Marketplace
             </Link>
             {status === 'authenticated' && (
-              <Link href="/marketplace/my-library" className="text-gray-600 hover:text-gray-800 block px-3 py-2 rounded-md text-base font-medium">
+              <Link href="/marketplace/my-library" className="text-foreground/80 hover:text-primary block px-3 py-2 rounded-md text-base font-medium">
                 My Library
               </Link>
             )}
             {status === 'loading' ? (
-              <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto my-2"></div>
             ) : status === 'authenticated' ? (
-              <Link href="/api/auth/signout" className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold block py-2 px-4 rounded-lg text-sm">
+              <Link href="/api/auth/signout" className="bg-muted hover:bg-muted/80 text-foreground font-bold block w-full text-left py-2 px-3 rounded-lg text-base">
                 Sign Out
               </Link>
             ) : (
-              <Link href="/auth/signin" className="bg-blue-600 hover:bg-blue-700 text-white font-bold block py-2 px-4 rounded-lg text-sm">
+              <Link href="/auth/signin" className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold block w-full text-left py-2 px-3 rounded-lg text-base">
                 Sign In
               </Link>
             )}
