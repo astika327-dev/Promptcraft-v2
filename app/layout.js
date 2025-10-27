@@ -14,7 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-grid-pattern bg-gray-900 text-gray-200`}>
+      <body className={inter.className}>
         <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Navbar />
