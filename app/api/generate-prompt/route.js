@@ -1,3 +1,5 @@
+import { headers } from 'next/headers';
+
 export async function POST(req) {
   const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
@@ -18,12 +20,17 @@ export async function POST(req) {
       });
     }
 
+    const headersList = headers();
+    const host = headersList.get('host');
+    const protocol = host.startsWith('localhost') ? 'http' : 'https';
+    const referer = `${protocol}://${host}`;
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
+        "HTTP-Referer": referer,
         "X-Title": "PromptCraft",
       },
       body: JSON.stringify({
