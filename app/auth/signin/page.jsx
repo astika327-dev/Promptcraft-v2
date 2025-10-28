@@ -32,7 +32,7 @@ export default function SignIn() {
     <div className="min-h-screen bg-grid-pattern text-gray-200 flex flex-col items-center justify-center p-4 font-sans">
       <div className="w-full max-w-md bg-black bg-opacity-50 backdrop-blur-md rounded-2xl border border-fuchsia-500/30 shadow-2xl shadow-fuchsia-500/10 p-8">
         <h1 className="text-4xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-cyan-400">
-          Sign In / Register
+          Sign In
         </h1>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -62,9 +62,15 @@ export default function SignIn() {
             type="submit"
             className="w-full bg-gradient-to-r from-fuchsia-600 to-blue-600 hover:from-fuchsia-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/30"
           >
-            Sign In / Register
+            Sign In
           </button>
         </form>
+        <p className="mt-6 text-center text-sm text-gray-400">
+          Don't have an account?{' '}
+          <Link href="/auth/register" className="font-medium text-fuchsia-400 hover:text-fuchsia-300">
+            Create Account
+          </Link>
+        </p>
       </div>
     </div>
   );

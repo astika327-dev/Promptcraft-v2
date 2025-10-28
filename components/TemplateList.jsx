@@ -9,6 +9,7 @@ export default function TemplateList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -18,8 +19,10 @@ export default function TemplateList() {
         const data = await response.json();
         setTemplates(data.templates);
         setTotalPages(data.totalPages);
+        setError(null); // Clear any previous errors
       } catch (error) {
         console.error('Failed to fetch templates:', error);
+        setError('Could not fetch templates. Please try again later.');
       }
       setIsLoading(false);
     };
@@ -29,6 +32,10 @@ export default function TemplateList() {
 
   if (isLoading) {
     return <div className="text-center text-muted-foreground">Loading templates...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center text-red-500">{error}</div>;
   }
 
   return (
