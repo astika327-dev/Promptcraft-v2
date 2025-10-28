@@ -24,17 +24,7 @@ export const authOptions = {
         });
 
         if (!user) {
-          // For simplicity, we'll create a new user on first login attempt.
-          // In a real app, you'd separate registration and login.
-          const hashedPassword = await bcrypt.hash(credentials.password, 10);
-          const newUser = await prisma.user.create({
-            data: {
-              email: credentials.email,
-              password: hashedPassword,
-              role: 'buyer' // Default role
-            }
-          });
-          return newUser;
+          return null; // User not found
         }
 
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
