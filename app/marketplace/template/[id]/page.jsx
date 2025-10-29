@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 export default function TemplateDetailPage({ params }) {
-  const [template, setTemplate] = useState(null);
+  const [template, setTemplate] = useState({});
   const [isPurchased, setIsPurchased] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
