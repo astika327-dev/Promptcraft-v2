@@ -34,7 +34,7 @@ export async function POST(req) {
         "X-Title": "PromptCraft",
       },
       body: JSON.stringify({
-        model: "openai/gpt-3.5-turbo",
+        model: "minimax/minimax-m2:free",
         messages: [
           { role: "system", content: "You are a world-class prompt engineer. Your task is to take a user's simple idea and transform it into a detailed, ready-to-use prompt for an AI image generator or language model. Your output should be ONLY the final prompt, without any additional explanations, pleasantries, or markdown formatting." },
           { role: "user", content: input }
