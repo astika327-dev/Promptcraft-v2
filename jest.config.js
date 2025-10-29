@@ -5,6 +5,7 @@ module.exports = {
     '^.+\\.jsx?$': ['babel-jest', { configFile: './babel.config.jest.js' }],
   },
   moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
     '^next/headers$': '<rootDir>/__mocks__/next/headers.js',
   },
 };
