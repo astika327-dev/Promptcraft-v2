@@ -28,8 +28,9 @@ export async function GET(req) {
       currentPage: page,
     });
   } catch (error) {
-    console.error("Failed to fetch templates:", error);
-    return NextResponse.json({ message: 'Failed to fetch templates' }, { status: 500 });
+    console.error("[TEMPLATES_GET_ERROR]", error);
+    const errorMessage = error.code ? `Database Error: ${error.code}` : 'Failed to fetch templates';
+    return NextResponse.json({ message: errorMessage }, { status: 500 });
   }
 }
 
