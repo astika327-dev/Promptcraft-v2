@@ -35,7 +35,10 @@ export async function POST(req) {
 
     return NextResponse.json({ message: 'User created successfully.' }, { status: 201 });
   } catch (error) {
-    console.error('Registration error:', error);
-    return NextResponse.json({ message: 'An internal server error occurred.' }, { status: 500 });
+    console.error('Registration API Error:', error);
+    if (error.code) { // Prisma errors often have a code
+      console.error('Prisma Error Code:', error.code);
+    }
+    return NextResponse.json({ message: 'An internal server error occurred.', error: error.message }, { status: 500 });
   }
 }
