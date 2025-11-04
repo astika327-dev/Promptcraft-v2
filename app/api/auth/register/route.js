@@ -36,9 +36,23 @@ export async function POST(req) {
     return NextResponse.json({ message: 'User created successfully.' }, { status: 201 });
   } catch (error) {
     console.error('Registration API Error:', error);
-    if (error.code) { // Prisma errors often have a code
+
+    // Specific check for Prisma database connection errors
+    if (error.name === 'PrismaClientInitializationError') {
+      console.error('Prisma Initialization Error Code:', error.errorCode);
+      return NextResponse.json(
+        {
+          message: 'Database connection error. Please check server configuration.',
+          error: 'Cannot connect to the database.'
+        },
+        { status: 500 }
+      );
+    }
+
+    if (error.code) { // Catch other Prisma-related errors
       console.error('Prisma Error Code:', error.code);
     }
+
     return NextResponse.json({ message: 'An internal server error occurred.', error: error.message }, { status: 500 });
   }
 }
