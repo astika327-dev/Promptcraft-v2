@@ -23,7 +23,8 @@ export default function SignIn() {
     });
 
     if (result.error) {
-      setError('Invalid credentials. Please try again.');
+      // result.error is a string with the error message from the authorize function
+      setError(result.error);
     } else {
       router.push('/marketplace');
     }
