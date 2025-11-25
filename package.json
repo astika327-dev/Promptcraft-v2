@@ -1,0 +1,27 @@
+{
+  "name": "promptcraft",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@auth/prisma-adapter": "^2.11.1",
+    "@prisma/client": "^6.18.0",
+    "@supabase/supabase-js": "^2.76.1",
+    "autoprefixer": "^10.4.21",
+    "bcrypt": "^6.0.0",
+    "next": "14.2.3",
+    "next-auth": "^4.24.11",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "postcss": "^8",
+    "prisma": "^6.18.0",
+    "tailwindcss": "^3.4.1"
+  }
+}
