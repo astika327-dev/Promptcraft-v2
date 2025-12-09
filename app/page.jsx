@@ -47,6 +47,53 @@ function useLocalStorage(key, initialValue) {
   return [storedValue, setValue];
 }
 
+// Style presets dengan ikon dan deskripsi
+const STYLE_OPTIONS = [
+  { value: 'professional', label: 'Professional', icon: '💼', description: 'Business-appropriate and authoritative' },
+  { value: 'creative', label: 'Creative', icon: '🎨', description: 'Imaginative and artistic' },
+  { value: 'technical', label: 'Technical', icon: '⚙️', description: 'Precise and systematic' },
+  { value: 'casual', label: 'Casual', icon: '😊', description: 'Friendly and conversational' },
+  { value: 'persuasive', label: 'Persuasive', icon: '🎯', description: 'Compelling and action-driven' },
+  { value: 'educational', label: 'Educational', icon: '📚', description: 'Clear explanations with examples' },
+];
+
+// Audience options
+const AUDIENCE_OPTIONS = [
+  { value: 'general', label: 'General Audience', icon: '👥' },
+  { value: 'beginners', label: 'Beginners', icon: '🌱' },
+  { value: 'intermediate', label: 'Intermediate', icon: '📈' },
+  { value: 'experts', label: 'Experts', icon: '🎓' },
+  { value: 'executives', label: 'Executives', icon: '👔' },
+  { value: 'developers', label: 'Developers', icon: '💻' },
+  { value: 'designers', label: 'Designers', icon: '🎨' },
+  { value: 'marketers', label: 'Marketers', icon: '📊' },
+];
+
+// Output format options
+const FORMAT_OPTIONS = [
+  { value: 'structured', label: 'Structured', icon: '📋' },
+  { value: 'narrative', label: 'Narrative', icon: '📖' },
+  { value: 'list', label: 'List', icon: '📝' },
+  { value: 'step_by_step', label: 'Step-by-Step', icon: '🔢' },
+  { value: 'markdown', label: 'Markdown', icon: '📄' },
+];
+
+// Category badges with colors
+const CATEGORY_BADGES = {
+  'image_generation': { label: 'Image Generation', color: 'bg-purple-500' },
+  'copywriting': { label: 'Copywriting', color: 'bg-pink-500' },
+  'code': { label: 'Code', color: 'bg-blue-500' },
+  'marketing': { label: 'Marketing', color: 'bg-green-500' },
+  'business': { label: 'Business', color: 'bg-amber-500' },
+  'creative_writing': { label: 'Creative Writing', color: 'bg-indigo-500' },
+  'education': { label: 'Education', color: 'bg-cyan-500' },
+  'technical': { label: 'Technical', color: 'bg-slate-500' },
+  'social_media': { label: 'Social Media', color: 'bg-rose-500' },
+  'email': { label: 'Email', color: 'bg-orange-500' },
+  'product': { label: 'Product', color: 'bg-teal-500' },
+  'ui_ux': { label: 'UI/UX', color: 'bg-violet-500' },
+};
+
 export default function Home() {
   const [input, setInput] = useState('');
   const [prompt, setPrompt] = useState('');
@@ -56,6 +103,16 @@ export default function Home() {
   const [history, setHistory] = useLocalStorage('promptHistory', []);
   const [showHistory, setShowHistory] = useState(false);
   const [charCount, setCharCount] = useState(0);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  
+  // Advanced options
+  const [selectedStyle, setSelectedStyle] = useState('professional');
+  const [selectedAudience, setSelectedAudience] = useState('general');
+  const [selectedFormat, setSelectedFormat] = useState('structured');
+  
+  // Metadata from response
+  const [promptMetadata, setPromptMetadata] = useState(null);
+  
   const [suggestions] = useState([
     "a dynamic logo for an agile cybersecurity firm",
     "a minimalist website design for a coffee shop",
@@ -80,6 +137,7 @@ export default function Home() {
     setError('');
     setPrompt('');
     setCopied(false);
+    setPromptMetadata(null);
 
     try {
       const response = await fetch('/api/generate-prompt', {
@@ -87,23 +145,31 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ input }),
+        body: JSON.stringify({ 
+          input,
+          style: selectedStyle,
+          audience: selectedAudience,
+          outputFormat: selectedFormat,
+          includeExamples: true
+        }),
       });
 
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.message || 'An unknown error occurred.');
+      const data = await response.json();
+      
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'An unknown error occurred.');
       }
 
-      const data = await response.json();
       setPrompt(data.prompt);
+      setPromptMetadata(data.metadata);
       
       // Add to history
       const newHistoryItem = {
         id: Date.now(),
         input: input,
         prompt: data.prompt,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        metadata: data.metadata
       };
       setHistory(prev => [newHistoryItem, ...prev.slice(0, 9)]); // Keep last 10
     } catch (err) {
@@ -128,6 +194,7 @@ export default function Home() {
   const loadFromHistory = (item) => {
     setInput(item.input);
     setPrompt(item.prompt);
+    setPromptMetadata(item.metadata);
     setShowHistory(false);
   };
 
@@ -152,8 +219,11 @@ export default function Home() {
             <h1 className="text-6xl md:text-7xl font-bold text-white mb-4 text-shadow-glow">
               Prompt<span className="text-purple-300">Craft</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/80 mb-6">
-              Transforming Ideas into Enterprise-Grade AI Prompts
+            <p className="text-xl md:text-2xl text-white/80 mb-4">
+              Enterprise-Grade AI Prompt Engineering
+            </p>
+            <p className="text-md text-white/60 mb-6 max-w-2xl mx-auto">
+              Powered by Google Prompt Engineering Best Practices • CO-STAR Framework • Chain-of-Thought
             </p>
             <div className="flex items-center justify-center space-x-4 text-white/60 text-sm">
               <div className="flex items-center space-x-2">
@@ -184,7 +254,7 @@ export default function Home() {
                 {/* Input Area */}
                 <div className="relative">
                   <label className="block text-white font-semibold mb-3 text-lg">
-                    What's your idea?
+                    What's your idea? ✨
                   </label>
                   <textarea
                     value={input}
@@ -194,9 +264,112 @@ export default function Home() {
                     placeholder="e.g., a dynamic logo for an agile cybersecurity firm..."
                   />
                   <div className="absolute bottom-3 right-3 text-white/50 text-sm">
-                    {charCount} characters
+                    {charCount} / 5000 characters
                   </div>
                 </div>
+
+                {/* Advanced Options Toggle */}
+                <div className="border-t border-white/10 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="flex items-center space-x-2 text-white/70 hover:text-white transition-all-fast"
+                  >
+                    <svg 
+                      className={`w-5 h-5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                    <span className="font-medium">Advanced Options</span>
+                    <span className="text-xs bg-purple-500/30 px-2 py-1 rounded-full">Pro</span>
+                  </button>
+                </div>
+
+                {/* Advanced Options Panel */}
+                {showAdvanced && (
+                  <div className="space-y-6 animate-fade-in bg-white/5 rounded-xl p-6 border border-white/10">
+                    {/* Style Selection */}
+                    <div>
+                      <label className="block text-white font-medium mb-3 flex items-center space-x-2">
+                        <span>🎨</span>
+                        <span>Style</span>
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {STYLE_OPTIONS.map((style) => (
+                          <button
+                            key={style.value}
+                            type="button"
+                            onClick={() => setSelectedStyle(style.value)}
+                            className={`p-3 rounded-lg text-left transition-all-fast border ${
+                              selectedStyle === style.value
+                                ? 'bg-purple-500/30 border-purple-400 text-white'
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            <div className="flex items-center space-x-2">
+                              <span>{style.icon}</span>
+                              <span className="font-medium">{style.label}</span>
+                            </div>
+                            <p className="text-xs mt-1 opacity-70">{style.description}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Audience Selection */}
+                    <div>
+                      <label className="block text-white font-medium mb-3 flex items-center space-x-2">
+                        <span>👥</span>
+                        <span>Target Audience</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {AUDIENCE_OPTIONS.map((audience) => (
+                          <button
+                            key={audience.value}
+                            type="button"
+                            onClick={() => setSelectedAudience(audience.value)}
+                            className={`px-4 py-2 rounded-lg transition-all-fast border ${
+                              selectedAudience === audience.value
+                                ? 'bg-purple-500/30 border-purple-400 text-white'
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            <span>{audience.icon}</span>
+                            <span className="ml-2">{audience.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Output Format Selection */}
+                    <div>
+                      <label className="block text-white font-medium mb-3 flex items-center space-x-2">
+                        <span>📋</span>
+                        <span>Output Format</span>
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {FORMAT_OPTIONS.map((format) => (
+                          <button
+                            key={format.value}
+                            type="button"
+                            onClick={() => setSelectedFormat(format.value)}
+                            className={`px-4 py-2 rounded-lg transition-all-fast border ${
+                              selectedFormat === format.value
+                                ? 'bg-purple-500/30 border-purple-400 text-white'
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10 hover:text-white'
+                            }`}
+                          >
+                            <span>{format.icon}</span>
+                            <span className="ml-2">{format.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Suggestions */}
                 <div className="space-y-2">
@@ -275,7 +448,14 @@ export default function Home() {
                       onClick={() => loadFromHistory(item)}
                       className="bg-white/5 hover:bg-white/10 p-4 rounded-lg cursor-pointer transition-all-fast border border-white/10 hover:border-white/20"
                     >
-                      <p className="text-white/90 text-sm mb-1">{item.input}</p>
+                      <div className="flex items-start justify-between">
+                        <p className="text-white/90 text-sm mb-1 flex-1">{item.input}</p>
+                        {item.metadata?.detectedCategory && CATEGORY_BADGES[item.metadata.detectedCategory] && (
+                          <span className={`${CATEGORY_BADGES[item.metadata.detectedCategory].color} text-white text-xs px-2 py-1 rounded-full ml-2`}>
+                            {CATEGORY_BADGES[item.metadata.detectedCategory].label}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-white/50 text-xs">
                         {new Date(item.timestamp).toLocaleString()}
                       </p>
@@ -304,12 +484,34 @@ export default function Home() {
             {prompt && (
               <div className="glass-card rounded-2xl p-8 mb-8 animate-fade-in">
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
-                    <svg className="w-7 h-7 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span>Your Generated Prompt</span>
-                  </h2>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white flex items-center space-x-2">
+                      <svg className="w-7 h-7 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span>Your Generated Prompt</span>
+                    </h2>
+                    {/* Metadata badges */}
+                    {promptMetadata && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {promptMetadata.detectedCategory && CATEGORY_BADGES[promptMetadata.detectedCategory] && (
+                          <span className={`${CATEGORY_BADGES[promptMetadata.detectedCategory].color} text-white text-xs px-2 py-1 rounded-full`}>
+                            {CATEGORY_BADGES[promptMetadata.detectedCategory].label}
+                          </span>
+                        )}
+                        {promptMetadata.wordCount && (
+                          <span className="bg-white/20 text-white/80 text-xs px-2 py-1 rounded-full">
+                            {promptMetadata.wordCount} words
+                          </span>
+                        )}
+                        {promptMetadata.characterCount && (
+                          <span className="bg-white/20 text-white/80 text-xs px-2 py-1 rounded-full">
+                            {promptMetadata.characterCount} chars
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={handleCopy}
                     className="relative group"
@@ -345,9 +547,12 @@ export default function Home() {
 
           {/* Features Section */}
           <section className="mt-24">
-            <h2 className="text-4xl md:text-5xl font-bold text-center mb-12 text-white">
+            <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-white">
               Why Choose <span className="text-purple-300">PromptCraft</span>?
             </h2>
+            <p className="text-white/60 text-center mb-12 max-w-2xl mx-auto">
+              Built on Google's Prompt Engineering Best Practices and industry-leading frameworks
+            </p>
             <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
@@ -356,8 +561,8 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                     </svg>
                   ),
-                  title: "Advanced AI",
-                  description: "Leverage state-of-the-art models to transform simple ideas into complex, powerful prompts.",
+                  title: "CO-STAR Framework",
+                  description: "Context, Objective, Style, Tone, Audience, Response - every prompt is engineered for maximum impact.",
                   gradient: "from-purple-500 to-pink-500"
                 },
                 {
@@ -366,18 +571,18 @@ export default function Home() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                   ),
-                  title: "Lightning Fast",
-                  description: "Get professional-grade prompts in seconds with our optimized AI processing pipeline.",
+                  title: "Chain-of-Thought",
+                  description: "Advanced reasoning techniques that break complex ideas into clear, logical prompt structures.",
                   gradient: "from-blue-500 to-cyan-500"
                 },
                 {
                   icon: (
                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                     </svg>
                   ),
-                  title: "Marketplace",
-                  description: "Discover, buy, and sell high-quality prompt templates from a community of creators.",
+                  title: "Few-Shot Learning",
+                  description: "Pre-trained examples for each category ensure consistently high-quality output that matches your needs.",
                   gradient: "from-green-500 to-emerald-500"
                 }
               ].map((feature, index) => (
@@ -404,9 +609,9 @@ export default function Home() {
             </h2>
             <div className="grid md:grid-cols-3 gap-8">
               {[
-                { step: "1", title: "Input Your Idea", description: "Start with a simple concept or idea. Let our AI do the heavy lifting." },
-                { step: "2", title: "Generate Prompt", description: "Our system crafts a detailed, professional-grade prompt for you." },
-                { step: "3", title: "Explore & Create", description: "Use your new prompt, or browse the marketplace for more inspiration." }
+                { step: "1", title: "Input Your Idea", description: "Start with a simple concept. Our AI analyzes and categorizes your input automatically." },
+                { step: "2", title: "AI Enhancement", description: "Using Google's frameworks, we transform your idea into a detailed, professional prompt." },
+                { step: "3", title: "Copy & Create", description: "Get a ready-to-use prompt optimized for the best AI output quality." }
               ].map((item, index) => (
                 <div key={index} className="flex flex-col items-center text-center">
                   <div className="relative mb-6">

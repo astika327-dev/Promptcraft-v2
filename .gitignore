@@ -70,3 +70,12 @@ logs
 *.sqlite
 *.sqlite3
 
+# Build logs
+build.log
+*.log
+
+# Secrets and API keys (extra protection)
+*secret*
+*apikey*
+*.key
+!*.key.example
