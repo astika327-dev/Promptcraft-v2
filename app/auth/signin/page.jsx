@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { signIn, signInWithOAuth } from '@/lib/supabase';
+import { signIn } from 'next-auth/react';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -19,20 +19,24 @@ export default function SignInPage() {
     setError('');
     setMessage('');
 
-    const { data, error: signInError } = await signIn(email, password);
+    try {
+      const result = await signIn('credentials', {
+        redirect: false,
+        email,
+        password,
+      });
 
-    if (signInError) {
-      setError(signInError.message);
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+      } else if (result?.ok) {
+        setMessage('Sign in successful! Redirecting...');
+        // Force a hard reload or router refresh to ensure session updates propagate
+        window.location.href = '/'; 
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
       setLoading(false);
-      return;
-    }
-
-    if (data?.user) {
-      setMessage('Sign in successful! Redirecting...');
-      setTimeout(() => {
-        router.push('/');
-        router.refresh();
-      }, 1000);
     }
   };
 
@@ -40,10 +44,10 @@ export default function SignInPage() {
     setLoading(true);
     setError('');
     
-    const { error: oauthError } = await signInWithOAuth(provider);
-    
-    if (oauthError) {
-      setError(oauthError.message);
+    try {
+      await signIn(provider, { callbackUrl: '/' });
+    } catch (err) {
+      setError('An unexpected error occurred with ' + provider);
       setLoading(false);
     }
   };

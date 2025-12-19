@@ -87,22 +87,6 @@ function convertToGeminiFormat(messages) {
 
 
 export async function POST(req) {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        message: 'Unauthorized. Please log in to use this feature.',
-        error: 'UNAUTHORIZED'
-      }), 
-      {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
-  }
-
   const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
 
   // Validate API key

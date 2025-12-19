@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import Link from 'next/link';
 
 // Debounce hook untuk optimasi
 function useDebounce(value, delay) {
@@ -101,7 +99,6 @@ const CATEGORY_BADGES = {
 };
 
 export default function Home() {
-  const { data: session, status } = useSession();
   const [input, setInput] = useState('');
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -257,41 +254,7 @@ export default function Home() {
           {/* Main Generator Card */}
           <main>
             <div className="glass-card rounded-2xl p-8 mb-8 hover-scale">
-              {status === 'loading' ? (
-                <div className="flex justify-center items-center py-20">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 border-4 border-purple-200/20 rounded-full"></div>
-                    <div className="absolute inset-0 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                  </div>
-                </div>
-              ) : status === 'unauthenticated' ? (
-                <div className="text-center py-16 px-4">
-                  <div className="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-md">
-                    <svg className="w-10 h-10 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-3xl font-bold text-white mb-4">Unlock Your Creativity</h3>
-                  <p className="text-white/70 mb-8 max-w-lg mx-auto text-lg leading-relaxed">
-                    Sign in to access our enterprise-grade prompt engineering tools, save your detailed history, and master the art of AI communication.
-                  </p>
-                  <div className="flex justify-center gap-4">
-                     <Link
-                      href="/api/auth/signin"
-                      className="relative group"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl blur opacity-75 group-hover:opacity-100 transition-all-base"></div>
-                      <div className="relative bg-white text-purple-600 font-bold py-4 px-8 rounded-xl hover:scale-105 transition-all-fast flex items-center space-x-2">
-                        <span>Sign In to Generate</span>
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                        </svg>
-                      </div>
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Input Area */}
                   <div className="relative">
                     <label className="block text-white font-semibold mb-3 text-lg">
@@ -468,7 +431,6 @@ export default function Home() {
                     )}
                   </div>
                 </form>
-              )}
             </div>
 
             {/* History Panel */}
