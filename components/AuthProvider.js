@@ -1,53 +1,24 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, onAuthStateChange } from '@/lib/supabase';
-
-const AuthContext = createContext({});
+import { SessionProvider, useSession, signOut as nextAuthSignOut } from 'next-auth/react';
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
-};
-
-export default function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const value = {
+  const { data: session, status } = useSession();
+  const loading = status === 'loading';
+  const user = session?.user ?? null;
+  
+  return {
     user,
     session,
     loading,
-    signOut: () => supabase.auth.signOut(),
+    signOut: () => nextAuthSignOut({ callbackUrl: '/' }),
   };
+};
 
+export default function AuthProvider({ children }) {
   return (
-    <AuthContext.Provider value={value}>
+    <SessionProvider>
       {children}
-    </AuthContext.Provider>
+    </SessionProvider>
   );
 }

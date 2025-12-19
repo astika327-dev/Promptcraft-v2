@@ -3,6 +3,8 @@ import {
   detectCategory, 
   PROMPT_CATEGORIES 
 } from '@/lib/prompt-engineering';
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 /**
  * PromptCraft API - Advanced Prompt Generation Endpoint
@@ -17,7 +19,7 @@ import {
  * @endpoint POST /api/generate-prompt
  */
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
 
 /**
  * Convert our message format to Gemini format
@@ -59,7 +61,7 @@ function convertToGeminiFormat(messages) {
       temperature: 0.7,
       topP: 0.9,
       topK: 40,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 50000,
     },
     safetySettings: [
       {
@@ -82,7 +84,25 @@ function convertToGeminiFormat(messages) {
   };
 }
 
+
+
 export async function POST(req) {
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return new Response(
+      JSON.stringify({ 
+        success: false,
+        message: 'Unauthorized. Please log in to use this feature.',
+        error: 'UNAUTHORIZED'
+      }), 
+      {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
   const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
 
   // Validate API key
